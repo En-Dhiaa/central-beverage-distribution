@@ -52,3 +52,18 @@
 - **Decision:** Every financial transaction automatically creates balanced journal entries (`debit == credit`). Every stock change creates an `InventoryTransaction` with document reference, user, and date.
 - **Consequences:** Absolute auditability, tamper resistance, and zero balance drift.
 
+---
+
+## ADR 006: Self-Contained In-Process Desktop Host & Standalone Offline Setup
+
+- **Date:** 2026-11-03
+- **Context:** Framework-dependent multi-process desktop deployments (e.g. `CentralBeverageDistribution.exe` spawning a separate `Beverage.Api.exe` child process) led to `ERR_CONNECTION_REFUSED` if the target operating system lacked global ASP.NET Core 8 runtimes, or if the child process was blocked by antivirus or delayed in port binding.
+- **Decision:**
+  1. Migrate `Beverage.Desktop` to host Kestrel, SQLite (`BeverageDbContext`), REST controllers, SignalR hub, and static React frontend assets **in-process** via a dedicated `LocalServer` engine.
+  2. Await `LocalServer.StartAsync()` completion before triggering WebView2 navigation, mathematically preventing any connection refused races.
+  3. Publish the desktop runtime with `--self-contained true` bundling all CoreCLR, WindowsDesktop, and AspNetCore binaries.
+  4. Anchor all user data to a local, isolated `Data/` vault (`beverage_system.db`, `invoices/`, `reports/`, `attachments/`, `backups/`).
+  5. Package the complete installation payload into a single standalone installer (`CentralBeverageDistribution-Setup.exe`) published with `PublishSingleFile=true` and `IncludeNativeLibrariesForSelfExtract=true`.
+- **Consequences:** True 100% offline autonomy. Zero internet connection required. Zero external .NET runtime prerequisites. Flawless native launch on any standard Windows 10/11 64-bit device.
+
+
