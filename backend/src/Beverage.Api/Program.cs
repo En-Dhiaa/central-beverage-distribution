@@ -21,14 +21,23 @@ builder.Services.AddDbContext<BeverageDbContext>(options =>
     }
     else
     {
-        var sqlitePath = connString ?? "Data Source=storage/beverage_system.db";
-        // Ensure storage directory exists
-        var dir = Path.GetDirectoryName(sqlitePath.Replace("Data Source=", "").Trim());
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        var rawPath = (connString ?? "Data Source=Data/beverage_system.db").Replace("Data Source=", "").Trim();
+        if (!Path.IsPathRooted(rawPath))
         {
-            Directory.CreateDirectory(dir);
+            rawPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rawPath);
         }
-        options.UseSqlite(sqlitePath);
+
+        var dataDir = Path.GetDirectoryName(rawPath);
+        if (!string.IsNullOrEmpty(dataDir))
+        {
+            Directory.CreateDirectory(dataDir);
+            Directory.CreateDirectory(Path.Combine(dataDir, "invoices"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "reports"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "attachments"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "backups"));
+        }
+
+        options.UseSqlite($"Data Source={rawPath}");
     }
 });
 

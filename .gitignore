@@ -51,7 +51,7 @@ backups/*
 
 # Releases & Distribution Binaries
 release/payload/
-release/*.zip
+*.zip
 
 # OS Generated
 Thumbs.db

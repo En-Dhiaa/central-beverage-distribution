@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -32,23 +34,25 @@ public class InstallerForm : Form
     // Step 2 controls
     private TextBox txtInstallPath = null!;
     private Button btnBrowse = null!;
+    private CheckBox chkDesktopShortcut = null!;
+    private CheckBox chkStartMenuShortcut = null!;
+    private CheckBox chkCreateDataVault = null!;
 
     // Step 3 controls
     private ProgressBar progressBar = null!;
     private Label lblStatus = null!;
+    private Label lblPercent = null!;
 
     // Step 4 controls
     private CheckBox chkLaunchNow = null!;
-    private CheckBox chkDesktopShortcut = null!;
 
     private string defaultInstallPath;
 
     public InstallerForm()
     {
-        defaultInstallPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "CentralBeverageDistribution"
-        );
+        // Default: C:\CentralBeverageDistribution or LocalAppData
+        var systemDrive = Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
+        defaultInstallPath = Path.Combine(systemDrive, "CentralBeverageDistribution");
 
         InitUI();
         ShowStep(1);
@@ -56,8 +60,8 @@ public class InstallerForm : Form
 
     private void InitUI()
     {
-        Text = "برنامج تثبيت نظام إدارة ثلاجة المياه والعصائر المركزية v1.1.0";
-        Size = new Size(680, 480);
+        Text = "مثبت نظام إدارة ثلاجة المياه والعصائر المركزية | Offline Enterprise Setup v1.2.0";
+        Size = new Size(740, 530);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -66,48 +70,48 @@ public class InstallerForm : Form
         Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
         BackColor = Color.FromArgb(248, 250, 252);
 
-        // Header Panel
+        // Header Panel (Midnight Slate with Gradient Accent)
         headerPanel = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 85,
-            BackColor = Color.FromArgb(15, 23, 42) // Dark Slate Blue
+            Height = 90,
+            BackColor = Color.FromArgb(15, 23, 42)
         };
 
-        var lblHeaderTitle = new Label
+        var lblBrand = new Label
         {
             Text = "نظام إدارة وتشغيل ثلاجة المياه والعصائر المركزية",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 13f, FontStyle.Bold),
             Location = new Point(25, 18),
             AutoSize = true
         };
 
-        var lblHeaderSub = new Label
+        var lblSub = new Label
         {
-            Text = "معالج التثبيت والإعداد التلقائي لنظام سطح المكتب وقاعدة البيانات",
+            Text = "حزمة التثبيت الذاتي الشاملة — يعمل محلياً 100% دون إنترنت (Offline Standalone Engine)",
             ForeColor = Color.FromArgb(148, 163, 184),
             Font = new Font("Segoe UI", 9f, FontStyle.Regular),
-            Location = new Point(25, 48),
+            Location = new Point(25, 50),
             AutoSize = true
         };
 
-        headerPanel.Controls.Add(lblHeaderTitle);
-        headerPanel.Controls.Add(lblHeaderSub);
+        headerPanel.Controls.Add(lblBrand);
+        headerPanel.Controls.Add(lblSub);
 
         // Footer Panel
         footerPanel = new Panel
         {
             Dock = DockStyle.Bottom,
-            Height = 65,
+            Height = 70,
             BackColor = Color.FromArgb(241, 245, 249)
         };
 
         btnCancel = new Button
         {
-            Text = "إلغاء الأمر",
-            Size = new Size(95, 34),
-            Location = new Point(25, 15),
+            Text = "إلغاء",
+            Size = new Size(100, 36),
+            Location = new Point(25, 16),
             BackColor = Color.White,
             FlatStyle = FlatStyle.System
         };
@@ -116,8 +120,8 @@ public class InstallerForm : Form
         btnNext = new Button
         {
             Text = "التالي >",
-            Size = new Size(110, 34),
-            Location = new Point(530, 15),
+            Size = new Size(125, 36),
+            Location = new Point(570, 16),
             BackColor = Color.FromArgb(37, 99, 235),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.System,
@@ -128,8 +132,8 @@ public class InstallerForm : Form
         btnBack = new Button
         {
             Text = "< السابق",
-            Size = new Size(95, 34),
-            Location = new Point(425, 15),
+            Size = new Size(100, 36),
+            Location = new Point(460, 16),
             BackColor = Color.White,
             FlatStyle = FlatStyle.System,
             Enabled = false
@@ -144,7 +148,7 @@ public class InstallerForm : Form
         contentPanel = new Panel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(30, 25, 30, 25)
+            Padding = new Padding(30, 20, 30, 20)
         };
 
         Controls.Add(contentPanel);
@@ -181,29 +185,39 @@ public class InstallerForm : Form
 
         var lblWelcome = new Label
         {
-            Text = "مرحبًا بك في مثبت نظام إدارة ثلاجة المياه والعصائر المركزية",
-            Font = new Font("Segoe UI", 11.5f, FontStyle.Bold),
+            Text = "مرحبًا بك في مثبت النظام الشامل والمستقل محلياً",
+            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             ForeColor = Color.FromArgb(15, 23, 42),
-            Location = new Point(25, 20),
+            Location = new Point(25, 15),
             AutoSize = true
         };
 
-        var lblDesc = new Label
+        var pnlFeatures = new Panel
         {
-            Text = "يقوم هذا المعالج بتثبيت جميع مكونات النظام كاملة على جهازك بما في ذلك:\n\n" +
-                   "• خادم ومحرك قواعد البيانات والعمليات المحاسبية المزدوجة (ASP.NET Core Web API 8).\n" +
-                   "• واجهة المستخدم التفاعلية المتطورة الداعمة للغة العربية (React 18 + Tailwind RTL).\n" +
-                   "• تطبيق سطح المكتب المستقل مع دعم التنبيهات اللحظية (SignalR Real-Time).\n" +
-                   "• تهيئة بيئة التخزين وإعداد قاعدة البيانات التشغيلية النظيفة الجاهزة للعمل الفعلي.\n\n" +
-                   "انقر فوق [التالي] للمتابعة واختيار مسار التثبيت.",
-            Font = new Font("Segoe UI", 9.5f),
-            ForeColor = Color.FromArgb(51, 65, 85),
-            Location = new Point(25, 60),
-            Size = new Size(590, 180)
+            Location = new Point(25, 55),
+            Size = new Size(650, 260),
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle
         };
 
+        var lblPoints = new Label
+        {
+            Text = "يقوم هذا البرنامج بتثبيت النظام كاملاً في ملف واحد مدمج ليعمل بصورة مستقلة:\n\n" +
+                   "✔ تشغيل محلي بالكامل (Offline): يعمل بكفاءة 100% دون الحاجة إلى أي اتصال بالإنترنت.\n\n" +
+                   "✔ حفظ محلي آمن (Local Data Vault): إنشاء مجلد منظم لقاعدة البيانات والفواتير والتقارير.\n\n" +
+                   "✔ تكامل عمودي حقيقي: محرك قواعد بيانات، خادم ويب محلي، وواجهة سطح مكتب فائقة السرعة.\n\n" +
+                   "✔ ضبط محاسبي صارم: القيد المزدوج، إدارة عهد الموزعين، تسويات الجرد، وإقفال اليومية.\n\n" +
+                   "✔ جاهزية تامة وفورية: خالٍ من البيانات الوهمية ومعد للبدء المباشر لإدخال بيانات منشأتك.\n\n" +
+                   "انقر فوق [التالي] لتحديد مسار التثبيت والبدء.",
+            Font = new Font("Segoe UI", 9.5f),
+            ForeColor = Color.FromArgb(30, 41, 59),
+            Location = new Point(20, 15),
+            Size = new Size(610, 230)
+        };
+        pnlFeatures.Controls.Add(lblPoints);
+
         contentPanel.Controls.Add(lblWelcome);
-        contentPanel.Controls.Add(lblDesc);
+        contentPanel.Controls.Add(pnlFeatures);
     }
 
     private void RenderStep2()
@@ -212,34 +226,34 @@ public class InstallerForm : Form
 
         var lblTitle = new Label
         {
-            Text = "حدد مجلد التثبيت:",
+            Text = "تحديد مسار التثبيت ومجلد حفظ البيانات:",
             Font = new Font("Segoe UI", 11f, FontStyle.Bold),
             ForeColor = Color.FromArgb(15, 23, 42),
-            Location = new Point(25, 20),
+            Location = new Point(25, 15),
             AutoSize = true
         };
 
         var lblSub = new Label
         {
-            Text = "سيتم تثبيت النظام في المجلد التالي. للمتابعة انقر [تثبيت الآن] أو اختر مجلدًا آخر:",
+            Text = "سيتم تثبيت النظام وإنشاء مجلد البيانات المحلي (قاعدة البيانات والمستندات) في المسار التالي:",
             Font = new Font("Segoe UI", 9.5f),
             ForeColor = Color.FromArgb(71, 85, 105),
-            Location = new Point(25, 55),
+            Location = new Point(25, 48),
             AutoSize = true
         };
 
         txtInstallPath = new TextBox
         {
             Text = defaultInstallPath,
-            Location = new Point(25, 95),
-            Size = new Size(470, 30),
+            Location = new Point(25, 85),
+            Size = new Size(505, 30),
             Font = new Font("Segoe UI", 9.5f)
         };
 
         btnBrowse = new Button
         {
             Text = "استعراض...",
-            Location = new Point(505, 93),
+            Location = new Point(540, 83),
             Size = new Size(110, 32),
             FlatStyle = FlatStyle.System
         };
@@ -253,21 +267,54 @@ public class InstallerForm : Form
             }
         };
 
+        var pnlOptions = new GroupBox
+        {
+            Text = "خيارات الإعداد المحلي",
+            Location = new Point(25, 135),
+            Size = new Size(625, 160),
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(15, 23, 42)
+        };
+
         chkDesktopShortcut = new CheckBox
         {
             Text = "إنشاء اختصار على سطح المكتب (Desktop Shortcut)",
             Checked = true,
-            Location = new Point(25, 150),
+            Location = new Point(20, 35),
             AutoSize = true,
-            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
             ForeColor = Color.FromArgb(30, 41, 59)
         };
+
+        chkStartMenuShortcut = new CheckBox
+        {
+            Text = "إضافة اختصار إلى قائمة ابدأ (Start Menu)",
+            Checked = true,
+            Location = new Point(20, 70),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(30, 41, 59)
+        };
+
+        chkCreateDataVault = new CheckBox
+        {
+            Text = "إنشاء وهيكلة مجلد البيانات المحلي (Data Vault: فواتير، تقارير، نسخ احتياطية)",
+            Checked = true,
+            Location = new Point(20, 105),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular),
+            ForeColor = Color.FromArgb(30, 41, 59)
+        };
+
+        pnlOptions.Controls.Add(chkDesktopShortcut);
+        pnlOptions.Controls.Add(chkStartMenuShortcut);
+        pnlOptions.Controls.Add(chkCreateDataVault);
 
         contentPanel.Controls.Add(lblTitle);
         contentPanel.Controls.Add(lblSub);
         contentPanel.Controls.Add(txtInstallPath);
         contentPanel.Controls.Add(btnBrowse);
-        contentPanel.Controls.Add(chkDesktopShortcut);
+        contentPanel.Controls.Add(pnlOptions);
     }
 
     private void RenderStep3()
@@ -278,79 +325,122 @@ public class InstallerForm : Form
 
         var lblTitle = new Label
         {
-            Text = "جاري تثبيت ملفات النظام...",
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            Text = "جاري استخراج وتثبيت النظام محلياً...",
+            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             ForeColor = Color.FromArgb(15, 23, 42),
-            Location = new Point(25, 25),
+            Location = new Point(25, 20),
             AutoSize = true
         };
 
         lblStatus = new Label
         {
-            Text = "جاري نسخ الملفات والمكتبات التشغيلية...",
-            Font = new Font("Segoe UI", 9f),
-            ForeColor = Color.FromArgb(100, 116, 139),
+            Text = "جاري تهيئة الحزمة وفك الضغط التلقائي...",
+            Font = new Font("Segoe UI", 9.5f),
+            ForeColor = Color.FromArgb(71, 85, 105),
             Location = new Point(25, 75),
-            Size = new Size(590, 25)
+            Size = new Size(540, 25)
+        };
+
+        lblPercent = new Label
+        {
+            Text = "0%",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(37, 99, 235),
+            Location = new Point(580, 75),
+            Size = new Size(60, 25),
+            TextAlign = ContentAlignment.TopLeft
         };
 
         progressBar = new ProgressBar
         {
             Location = new Point(25, 110),
-            Size = new Size(590, 28),
+            Size = new Size(625, 30),
             Style = ProgressBarStyle.Continuous,
-            Value = 10
+            Value = 5
         };
+
+        var pnlDetails = new Panel
+        {
+            Location = new Point(25, 160),
+            Size = new Size(625, 130),
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle
+        };
+
+        var lblInfo = new Label
+        {
+            Text = "معلومات التثبيت الحالية:\n" +
+                   "• يتم نسخ كافة المكونات المدمجة داخل ملف التثبيت إلى المسار المحلي المختار.\n" +
+                   "• يتم إعداد خادم ومحرك قواعد البيانات SQLite المحلي ليعمل ذاتياً.\n" +
+                   "• لن يحتاج النظام لأي اتصال بالإنترنت أثناء أو بعد التثبيت إطلاقاً.",
+            Font = new Font("Segoe UI", 9f),
+            ForeColor = Color.FromArgb(100, 116, 139),
+            Location = new Point(15, 15),
+            Size = new Size(590, 100)
+        };
+        pnlDetails.Controls.Add(lblInfo);
 
         contentPanel.Controls.Add(lblTitle);
         contentPanel.Controls.Add(lblStatus);
+        contentPanel.Controls.Add(lblPercent);
         contentPanel.Controls.Add(progressBar);
+        contentPanel.Controls.Add(pnlDetails);
 
-        // Execute background installation
         Task.Run(ExecuteInstallation);
     }
 
     private void RenderStep4()
     {
-        btnNext.Text = "إنهاء";
+        btnNext.Text = "إنهاء والبدء";
         btnNext.Enabled = true;
         btnBack.Enabled = false;
         btnCancel.Enabled = false;
 
         var lblSuccess = new Label
         {
-            Text = "تهانينا! اكتمل تثبيت النظام بنجاح",
-            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            Text = "تم تثبيت النظام وإعداد قاعدة البيانات بنجاح!",
+            Font = new Font("Segoe UI", 13f, FontStyle.Bold),
             ForeColor = Color.FromArgb(22, 101, 52), // Forest Green
-            Location = new Point(25, 20),
+            Location = new Point(25, 15),
             AutoSize = true
         };
 
-        var lblSummary = new Label
+        var pnlSummary = new Panel
         {
-            Text = "تم تثبيت وتهيئة النظام بنجاح وهو الآن جاهز للاستخدام التجاري الفعلي.\n\n" +
-                   "بيانات الدخول الافتراضية كمسؤول عام:\n" +
-                   "• اسم المستخدم: admin\n" +
-                   "• كلمة المرور: Admin@123456\n\n" +
-                   "ملاحظة: يمكنك تغيير كلمة المرور وإدارة المستخدمين من شاشة الإعدادات داخل النظام.",
-            Font = new Font("Segoe UI", 9.5f),
-            ForeColor = Color.FromArgb(51, 65, 85),
-            Location = new Point(25, 65),
-            Size = new Size(590, 120)
+            Location = new Point(25, 55),
+            Size = new Size(635, 185),
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle
         };
+
+        var lblSummaryText = new Label
+        {
+            Text = "النظام مثبت وجاهز للتشغيل المحلي الفعلي على هذا الجهاز.\n\n" +
+                   $"• مسار النظام: {txtInstallPath.Text}\n" +
+                   $"• مجلد البيانات وقاعدة البيانات: {Path.Combine(txtInstallPath.Text, "Data")}\n\n" +
+                   "بيانات الدخول المعتمدة كمسؤول عام للنظام:\n" +
+                   "  - اسم المستخدم: admin\n" +
+                   "  - كلمة المرور: Admin@123456\n\n" +
+                   "يمكنك إدارة المستخدمين والأصناف والموزعين فور الدخول مباشرة.",
+            Font = new Font("Segoe UI", 9.5f),
+            ForeColor = Color.FromArgb(30, 41, 59),
+            Location = new Point(15, 15),
+            Size = new Size(600, 155)
+        };
+        pnlSummary.Controls.Add(lblSummaryText);
 
         chkLaunchNow = new CheckBox
         {
-            Text = "تشغيل نظام ثلاجة المياه المركزية الآن",
+            Text = "تشغيل نظام ثلاجة المياه والعصائر المركزية الآن",
             Checked = true,
-            Location = new Point(25, 200),
+            Location = new Point(25, 255),
             AutoSize = true,
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
             ForeColor = Color.FromArgb(37, 99, 235)
         };
 
         contentPanel.Controls.Add(lblSuccess);
-        contentPanel.Controls.Add(lblSummary);
+        contentPanel.Controls.Add(pnlSummary);
         contentPanel.Controls.Add(chkLaunchNow);
     }
 
@@ -390,61 +480,124 @@ public class InstallerForm : Form
             var targetDir = txtInstallPath.Text.Trim();
             if (string.IsNullOrEmpty(targetDir)) targetDir = defaultInstallPath;
 
-            UpdateProgress(15, "إنشاء المجلدات والمسارات...");
+            UpdateProgress(10, "إنشاء مجلدات النظام والبيانات المحلية...");
             Directory.CreateDirectory(targetDir);
-            Directory.CreateDirectory(Path.Combine(targetDir, "storage"));
-            Directory.CreateDirectory(Path.Combine(targetDir, "storage", "invoices"));
-            Directory.CreateDirectory(Path.Combine(targetDir, "storage", "reports"));
-            Directory.CreateDirectory(Path.Combine(targetDir, "storage", "attachments"));
 
-            // Source payload directory
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var payloadDir = Path.Combine(baseDir, "payload");
-            if (!Directory.Exists(payloadDir))
+            var dataDir = Path.Combine(targetDir, "Data");
+            Directory.CreateDirectory(dataDir);
+            Directory.CreateDirectory(Path.Combine(dataDir, "invoices"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "reports"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "attachments"));
+            Directory.CreateDirectory(Path.Combine(dataDir, "backups"));
+
+            // 1. Locate Embedded Zip or fallback local file
+            UpdateProgress(20, "استخراج ملفات النظام المدمجة في المثبت...");
+            var assembly = Assembly.GetExecutingAssembly();
+            Stream? zipStream = null;
+
+            foreach (var resName in assembly.GetManifestResourceNames())
             {
-                // Fallback to baseDir if payload files are adjacent
-                payloadDir = baseDir;
+                if (resName.EndsWith("Payload.zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    zipStream = assembly.GetManifestResourceStream(resName);
+                    break;
+                }
             }
 
-            UpdateProgress(35, "نسخ ملفات المحرك وتطبيق سطح المكتب...");
-            CopyDirectory(payloadDir, targetDir);
+            if (zipStream == null)
+            {
+                // Fallback: Check local Payload.zip or payload directory
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var localZip = Path.Combine(baseDir, "Payload.zip");
+                if (File.Exists(localZip))
+                {
+                    zipStream = File.OpenRead(localZip);
+                }
+                else
+                {
+                    var payloadDir = Path.Combine(baseDir, "payload");
+                    if (Directory.Exists(payloadDir))
+                    {
+                        CopyDirectory(payloadDir, targetDir);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException("لم يتم العثور على حزمة ملفات النظام المدمجة داخل المثبت.");
+                    }
+                }
+            }
 
-            UpdateProgress(70, "تهيئة إعدادات النظام ومسارات البيانات...");
+            if (zipStream != null)
+            {
+                using (zipStream)
+                using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                {
+                    int totalEntries = archive.Entries.Count;
+                    int extracted = 0;
 
-            // Create desktop shortcut if selected
+                    foreach (var entry in archive.Entries)
+                    {
+                        if (string.IsNullOrEmpty(entry.Name))
+                        {
+                            Directory.CreateDirectory(Path.Combine(targetDir, entry.FullName));
+                            continue;
+                        }
+
+                        var destPath = Path.Combine(targetDir, entry.FullName);
+                        var parent = Path.GetDirectoryName(destPath);
+                        if (!string.IsNullOrEmpty(parent))
+                        {
+                            Directory.CreateDirectory(parent);
+                        }
+
+                        entry.ExtractToFile(destPath, overwrite: true);
+                        extracted++;
+
+                        int progress = 20 + (int)((float)extracted / totalEntries * 65);
+                        UpdateProgress(progress, $"جاري استخراج: {entry.Name} ({extracted}/{totalEntries})");
+                    }
+                }
+            }
+
+            // 2. Create Desktop Shortcut
             if (chkDesktopShortcut != null && chkDesktopShortcut.Checked)
             {
-                UpdateProgress(85, "إنشاء اختصار سطح المكتب...");
-                CreateShortcut(
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "نظام ثلاجة المياه المركزية.lnk"),
-                    Path.Combine(targetDir, "CentralBeverageDistribution.exe"),
-                    targetDir
-                );
+                UpdateProgress(88, "إنشاء اختصار سطح المكتب...");
+                var desktopLnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "نظام ثلاجة المياه المركزية.lnk");
+                CreateShortcut(desktopLnk, Path.Combine(targetDir, "CentralBeverageDistribution.exe"), targetDir);
             }
 
-            // Create Start Menu shortcut
-            var startMenuDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", "CentralBeverageDistribution");
-            Directory.CreateDirectory(startMenuDir);
-            CreateShortcut(
-                Path.Combine(startMenuDir, "نظام ثلاجة المياه المركزية.lnk"),
-                Path.Combine(targetDir, "CentralBeverageDistribution.exe"),
-                targetDir
-            );
+            // 3. Create Start Menu Shortcut
+            if (chkStartMenuShortcut != null && chkStartMenuShortcut.Checked)
+            {
+                UpdateProgress(94, "إضافة اختصار إلى قائمة ابدأ...");
+                var startMenuDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", "CentralBeverageDistribution");
+                Directory.CreateDirectory(startMenuDir);
+                CreateShortcut(Path.Combine(startMenuDir, "نظام ثلاجة المياه المركزية.lnk"), Path.Combine(targetDir, "CentralBeverageDistribution.exe"), targetDir);
+            }
 
-            // Write Start Guide & Info
-            var readmePath = Path.Combine(targetDir, "START_GUIDE.txt");
-            var readmeContent = "=====================================================\r\n" +
-                                "نظام إدارة وتشغيل ثلاجة المياه والعصائر المركزية v1.1.0\r\n" +
-                                "=====================================================\r\n\r\n" +
-                                "بيانات تسجيل الدخول الافتراضية:\r\n" +
-                                "اسم المستخدم: admin\r\n" +
-                                "كلمة المرور: Admin@123456\r\n\r\n" +
-                                "لتشغيل النظام: انقر نقرًا مزدوجًا على CentralBeverageDistribution.exe\r\n" +
-                                "أو من خلال اختصار سطح المكتب.\r\n";
-            File.WriteAllText(readmePath, readmeContent, System.Text.Encoding.UTF8);
+            // 4. Create Start Guide & Uninstaller script
+            var guideFile = Path.Combine(targetDir, "START_GUIDE.txt");
+            var guideText = "========================================================================\r\n" +
+                            "نظام إدارة وتشغيل ثلاجة المياه والعصائر المركزية (Offline Enterprise v1.2.0)\r\n" +
+                            "========================================================================\r\n\r\n" +
+                            "النظام يعمل محلياً 100% دون أي حاجة للإنترنت.\r\n\r\n" +
+                            "بيانات الدخول الافتراضية:\r\n" +
+                            "• اسم المستخدم: admin\r\n" +
+                            "• كلمة المرور: Admin@123456\r\n\r\n" +
+                            "مجلد حفظ البيانات والمستندات:\r\n" +
+                            $"{dataDir}\r\n\r\n" +
+                            "لتشغيل النظام: استخدم اختصار سطح المكتب أو شغل CentralBeverageDistribution.exe\r\n";
+            File.WriteAllText(guideFile, guideText, System.Text.Encoding.UTF8);
 
-            UpdateProgress(100, "اكتمل التثبيت بنجاح!");
-            await Task.Delay(500);
+            var uninstallBat = Path.Combine(targetDir, "uninstall.bat");
+            var uninstText = "@echo off\r\nchcp 65001 >nul\r\necho جاري حذف اختصارات النظام...\r\n" +
+                             "del \"%USERPROFILE%\\Desktop\\نظام ثلاجة المياه المركزية.lnk\" 2>nul\r\n" +
+                             "echo تم حذف الاختصارات بنجاح. يمكنك حذف المجلد يدوياً متى شئت.\r\npause\r\n";
+            File.WriteAllText(uninstallBat, uninstText, System.Text.Encoding.UTF8);
+
+            UpdateProgress(100, "اكتمل التثبيت بنجاح تام!");
+            await Task.Delay(400);
 
             Invoke(new Action(() => ShowStep(4)));
         }
@@ -466,8 +619,10 @@ public class InstallerForm : Form
             return;
         }
 
-        progressBar.Value = Math.Clamp(value, 0, 100);
+        var clamped = Math.Clamp(value, 0, 100);
+        progressBar.Value = clamped;
         lblStatus.Text = status;
+        lblPercent.Text = $"{clamped}%";
     }
 
     private void CopyDirectory(string sourceDir, string destinationDir)
@@ -475,7 +630,6 @@ public class InstallerForm : Form
         foreach (var file in Directory.GetFiles(sourceDir))
         {
             var fileName = Path.GetFileName(file);
-            // Avoid copying the installer itself if running in the same directory
             if (fileName.Contains("Setup", StringComparison.OrdinalIgnoreCase)) continue;
 
             var destFile = Path.Combine(destinationDir, fileName);
@@ -485,8 +639,6 @@ public class InstallerForm : Form
         foreach (var subDir in Directory.GetDirectories(sourceDir))
         {
             var dirName = Path.GetFileName(subDir);
-            if (dirName.Equals("storage", StringComparison.OrdinalIgnoreCase)) continue;
-
             var destSubDir = Path.Combine(destinationDir, dirName);
             Directory.CreateDirectory(destSubDir);
             CopyDirectory(subDir, destSubDir);
@@ -510,7 +662,7 @@ public class InstallerForm : Form
         }
         catch
         {
-            // Silently continue if COM shortcut creation is restricted
+            // Silently continue if WScript is unavailable
         }
     }
 }

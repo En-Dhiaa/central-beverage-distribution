@@ -44,10 +44,10 @@ static class Program
             var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, userDataFolder);
             await webView.EnsureCoreWebView2Async(env);
 
-            // Wait for backend health check
-            await WaitForBackendReadyAsync("http://localhost:5000", TimeSpan.FromSeconds(8));
+            // Wait for backend health check on local loopback (instant offline)
+            await WaitForBackendReadyAsync("http://127.0.0.1:5000", TimeSpan.FromSeconds(10));
 
-            webView.Source = new Uri("http://localhost:5000");
+            webView.Source = new Uri("http://127.0.0.1:5000");
         };
 
         form.FormClosing += (s, e) =>
@@ -63,7 +63,7 @@ static class Program
         try
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(1) };
-            var res = client.GetAsync("http://localhost:5000/api/v1/auth/me").GetAwaiter().GetResult();
+            var res = client.GetAsync("http://127.0.0.1:5000/api/v1/auth/me").GetAwaiter().GetResult();
             // Backend already running on port 5000
             return;
         }
@@ -117,7 +117,7 @@ static class Program
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            psi.Environment["ASPNETCORE_URLS"] = "http://localhost:5000";
+            psi.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:5000;http://localhost:5000";
             _backendProcess = Process.Start(psi);
         }
     }

@@ -49,3 +49,4 @@ if /i "%LAUNCH%"=="Y" (
     start "" "%TARGET_DIR%\CentralBeverageDistribution.exe"
 )
 pause
+
