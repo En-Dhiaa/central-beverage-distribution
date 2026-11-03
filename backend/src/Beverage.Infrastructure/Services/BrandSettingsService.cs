@@ -111,3 +111,4 @@ public class BrandSettingsService : IBrandSettingsService
         return await GetCompanyProfileAsync();
     }
 }
+

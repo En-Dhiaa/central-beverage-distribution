@@ -449,3 +449,4 @@ export const QuotationsView: React.FC = () => {
     </div>
   );
 };
+

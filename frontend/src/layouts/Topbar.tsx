@@ -138,11 +138,10 @@ export const Topbar: React.FC = () => {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsNotifOpen(!isNotifOpen)}
-            className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${
-              isNotifOpen
+            className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${isNotifOpen
                 ? 'border-primary bg-primary/10 text-primary'
                 : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
+              }`}
             title="مركز الإشعارات والتنبيهات الصوتية"
           >
             <Bell className="h-4 w-4" />
@@ -215,17 +214,15 @@ export const Topbar: React.FC = () => {
                           setIsNotifOpen(false);
                         }
                       }}
-                      className={`flex items-start gap-3 p-3.5 text-xs transition-colors cursor-pointer hover:bg-muted/50 ${
-                        !n.isRead ? 'bg-primary/5' : ''
-                      }`}
+                      className={`flex items-start gap-3 p-3.5 text-xs transition-colors cursor-pointer hover:bg-muted/50 ${!n.isRead ? 'bg-primary/5' : ''
+                        }`}
                     >
                       <div className="mt-0.5">{getNotifIcon(n.type)}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
                           <span
-                            className={`font-bold truncate ${
-                              !n.isRead ? 'text-foreground' : 'text-muted-foreground'
-                            }`}
+                            className={`font-bold truncate ${!n.isRead ? 'text-foreground' : 'text-muted-foreground'
+                              }`}
                           >
                             {n.title}
                           </span>

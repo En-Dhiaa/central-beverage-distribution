@@ -467,3 +467,4 @@ export const OnboardingWizardModal: React.FC<Props> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+
