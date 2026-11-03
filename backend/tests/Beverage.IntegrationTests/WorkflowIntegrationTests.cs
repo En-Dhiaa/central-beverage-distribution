@@ -44,25 +44,26 @@ public class WorkflowIntegrationTests : IClassFixture<WebApplicationFactory<Prog
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authData.Token);
 
-        // 2. Fetch Initial State
-        var products = await _client.GetFromJsonAsync<List<ProductDto>>("/api/v1/products");
-        var suppliers = await _client.GetFromJsonAsync<List<SupplierDto>>("/api/v1/suppliers");
-        var distributors = await _client.GetFromJsonAsync<List<DistributorDto>>("/api/v1/distributors");
-        var customers = await _client.GetFromJsonAsync<List<CustomerDto>>("/api/v1/customers");
+        // 2. Setup Master Entities dynamically via API (Verifying fresh clean-state workflow)
+        var supRes = await _client.PostAsJsonAsync("/api/v1/suppliers", new CreateSupplierRequest("SUP-101", "شركة مياه للتوريد", "مؤسسة التوريد", "770011223", "صنعاء", 0, "مورد معتمد"));
+        Assert.True(supRes.IsSuccessStatusCode, "Supplier creation failed");
+        var supplier = await supRes.Content.ReadFromJsonAsync<SupplierDto>();
+        Assert.NotNull(supplier);
 
-        Assert.NotNull(products);
-        Assert.NotEmpty(products);
-        Assert.NotNull(suppliers);
-        Assert.NotEmpty(suppliers);
-        Assert.NotNull(distributors);
-        Assert.NotEmpty(distributors);
-        Assert.NotNull(customers);
-        Assert.NotEmpty(customers);
+        var prodRes = await _client.PostAsJsonAsync("/api/v1/products", new CreateProductRequest("WAT-TEST-001", "629100099901", "مياه صحية 0.75L", "Healthy Water 0.75L", null, "مصنع المياه الحديث", 12, 2500m, 4500m, 400m, 20));
+        Assert.True(prodRes.IsSuccessStatusCode, "Product creation failed");
+        var product = await prodRes.Content.ReadFromJsonAsync<ProductDto>();
+        Assert.NotNull(product);
 
-        var product = products[0];
-        var supplier = suppliers[0];
-        var distributor = distributors[0];
-        var customer = customers[0];
+        var distRes = await _client.PostAsJsonAsync("/api/v1/distributors", new CreateDistributorRequest("DIST-01", "موزع الأمانة والخط الغربي", "772233445", "شارع الستين", "خط الستين - الرباط", "Consignment", 500000m, 0));
+        Assert.True(distRes.IsSuccessStatusCode, "Distributor creation failed");
+        var distributor = await distRes.Content.ReadFromJsonAsync<DistributorDto>();
+        Assert.NotNull(distributor);
+
+        var custRes = await _client.PostAsJsonAsync("/api/v1/customers", new CreateCustomerRequest("CUST-01", "بقالة الأمل المركزية", "عبد الرحمن", "773344556", "شارع الستين", "الستين", 200000m, 0, distributor.Id));
+        Assert.True(custRes.IsSuccessStatusCode, "Customer creation failed");
+        var customer = await custRes.Content.ReadFromJsonAsync<CustomerDto>();
+        Assert.NotNull(customer);
 
         // 3. Workflow 1: Purchase 100 cartons into Main Warehouse
         var purchaseReq = new CreatePurchaseInvoiceRequest(

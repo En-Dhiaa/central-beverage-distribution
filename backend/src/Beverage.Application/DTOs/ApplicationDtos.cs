@@ -82,7 +82,7 @@ public record CreateProductRequest(
     string? Barcode,
     string Name,
     string? NameEn,
-    Guid CategoryId,
+    Guid? CategoryId,
     string? Manufacturer,
     int UnitsPerCarton,
     decimal DefaultPurchasePriceCarton,

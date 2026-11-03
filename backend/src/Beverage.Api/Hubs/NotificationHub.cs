@@ -21,3 +21,4 @@ public class NotificationHub : Hub<INotificationClient>
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"warehouse_{warehouseId}");
     }
 }
+

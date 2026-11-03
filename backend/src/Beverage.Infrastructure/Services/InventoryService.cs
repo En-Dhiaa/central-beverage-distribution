@@ -71,13 +71,20 @@ public class InventoryService : IInventoryService
         var baseUnit = await _context.Units.FirstOrDefaultAsync(u => u.Name == "حبة")
             ?? await _context.Units.FirstAsync();
 
+        var categoryId = request.CategoryId ?? Guid.Empty;
+        if (categoryId == Guid.Empty)
+        {
+            var firstCat = await _context.Categories.FirstOrDefaultAsync();
+            if (firstCat != null) categoryId = firstCat.Id;
+        }
+
         var product = new Product
         {
             Sku = request.Sku.Trim().ToUpperInvariant(),
             Barcode = request.Barcode,
             Name = request.Name.Trim(),
             NameEn = request.NameEn?.Trim(),
-            CategoryId = request.CategoryId,
+            CategoryId = categoryId,
             Manufacturer = request.Manufacturer?.Trim(),
             BaseUnitId = baseUnit.Id,
             UnitsPerCarton = request.UnitsPerCarton > 0 ? request.UnitsPerCarton : 12,

@@ -132,12 +132,16 @@ if (app.Environment.IsDevelopment() || true) // Swagger enabled for API explorat
     });
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<Beverage.Api.Hubs.NotificationHub>("/hubs/notifications");
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

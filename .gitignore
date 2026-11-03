@@ -49,8 +49,9 @@ storage/reports/*
 backups/*
 !backups/.gitkeep
 
-# Tauri / Rust
-desktop/tauri/target/
+# Releases & Distribution Binaries
+release/payload/
+release/*.zip
 
 # OS Generated
 Thumbs.db

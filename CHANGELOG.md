@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [1.2.0] - 2026-11-03
+
+### Clean Production State & Native Windows Installer Release
+- **Clean Master Database & Zero Mock Data:**
+  - Removed all mock and dummy products, suppliers, distributors, and customer records from database seeding.
+  - Initialized clean, genuine master infrastructure:
+    - 4 System Roles: SuperAdmin, Accountant, WarehouseManager, SalesManager.
+    - Default SuperAdmin user (`admin` / `Admin@123456`).
+    - Standard Chart of Accounts (10 double-entry operational accounts).
+    - Standard Units (Carton, Piece, Pack, Shrink).
+    - Operational Warehouses (Main Storage WH-MAIN, Central Cold Storage WH-COLD).
+    - Real Expense Categories (Electricity/Cooling, Fuel/Fleet, Wages, Rent, Maintenance, Admin).
+    - Standard Beverage Product Categories (Mineral Waters, Natural Juices, Soft Drinks, Energy Drinks).
+    - Clean slate for actual business entry with 0 fake transactions.
+- **Embedded Static Web Hosting & Single-Port Simplicity:**
+  - Configured ASP.NET Core Kestrel to serve the React frontend SPA directly from `wwwroot/` via `UseDefaultFiles()`, `UseStaticFiles()`, and `MapFallbackToFile("index.html")`.
+  - Enables zero-configuration LAN deployment and zero CORS issues.
+- **Automated Desktop Process Orchestration:**
+  - Desktop host automatically starts the backend API on launch, waits for health check, and gracefully shuts down backend processes on exit.
+- **Native Windows Setup Installer (`CentralBeverageDistribution-Setup.exe`):**
+  - Created dedicated .NET Windows Forms installation wizard in Arabic RTL (`desktop/installer/`).
+  - Supports custom installation path, desktop shortcut creation, Start Menu shortcut creation, and automatic first launch.
+  - Created 1-click batch installation script (`release/install.bat`).
+  - Packaged 5.8 MB standalone zip distribution (`release/CentralBeverageDistribution-v1.1-Windows.zip`).
+
+---
+
 ## [1.1.0] - 2026-11-03
 
 ### End-of-Day Closing, SignalR Real-Time Hubs & Integration Test Verification
