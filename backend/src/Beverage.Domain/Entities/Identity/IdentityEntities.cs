@@ -70,3 +70,4 @@ public class UserPreference : BaseEntity
     public int NotificationVolume { get; set; } = 80;
     public string DashboardLayoutJson { get; set; } = "{}";
 }
+

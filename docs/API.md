@@ -40,3 +40,4 @@ Base Route: `/api/v1`
 - `POST /api/v1/finance/vouchers`: Payment voucher (Receipt / Payment).
 - `POST /api/v1/finance/expenses`: Record and pay operating expenses.
 - `GET /api/v1/finance/journal`: List balanced double-entry journal entries.
+

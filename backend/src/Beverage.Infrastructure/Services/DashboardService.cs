@@ -23,21 +23,29 @@ public class DashboardService : IDashboardService
         var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
 
-        var todaySales = await _context.SalesInvoices
+        var todaySalesList = await _context.SalesInvoices
             .Where(s => s.InvoiceDate >= today && s.InvoiceDate < tomorrow && s.Status == DocumentStatus.Approved)
-            .SumAsync(s => s.Total);
+            .Select(s => s.Total)
+            .ToListAsync();
+        var todaySales = todaySalesList.Sum();
 
-        var todayPurchases = await _context.PurchaseInvoices
+        var todayPurchasesList = await _context.PurchaseInvoices
             .Where(p => p.InvoiceDate >= today && p.InvoiceDate < tomorrow && p.Status == DocumentStatus.Approved)
-            .SumAsync(p => p.Total);
+            .Select(p => p.Total)
+            .ToListAsync();
+        var todayPurchases = todayPurchasesList.Sum();
 
-        var todayReceipts = await _context.PaymentVouchers
+        var todayReceiptsList = await _context.PaymentVouchers
             .Where(v => v.PaymentDate >= today && v.PaymentDate < tomorrow && v.VoucherType == VoucherType.Receipt && v.Status == DocumentStatus.Approved)
-            .SumAsync(v => v.Amount);
+            .Select(v => v.Amount)
+            .ToListAsync();
+        var todayReceipts = todayReceiptsList.Sum();
 
-        var todayExpenses = await _context.Expenses
+        var todayExpensesList = await _context.Expenses
             .Where(e => e.ExpenseDate >= today && e.ExpenseDate < tomorrow)
-            .SumAsync(e => e.Amount);
+            .Select(e => e.Amount)
+            .ToListAsync();
+        var todayExpenses = todayExpensesList.Sum();
 
         // Warehouses Stock
         var mainWh = await _context.Warehouses.FirstOrDefaultAsync(w => w.WarehouseType == WarehouseType.General);
@@ -50,16 +58,21 @@ public class DashboardService : IDashboardService
         // Total Custody across all distributors
         var custodyPieces = await _inventoryService.GetDistributorCustodyPiecesAsync(Guid.Empty, Guid.Empty);
 
-        var customerDebt = await _context.Customers.Where(c => c.IsActive && c.CurrentBalance > 0).SumAsync(c => c.CurrentBalance);
-        var supplierDebt = await _context.Suppliers.Where(s => s.IsActive && s.CurrentBalance > 0).SumAsync(s => s.CurrentBalance);
-        var cashBalance = await _context.Cashboxes.Where(c => c.IsActive).SumAsync(c => c.CurrentBalance);
+        var customerDebtList = await _context.Customers.Where(c => c.IsActive && c.CurrentBalance > 0).Select(c => c.CurrentBalance).ToListAsync();
+        var customerDebt = customerDebtList.Sum();
+
+        var supplierDebtList = await _context.Suppliers.Where(s => s.IsActive && s.CurrentBalance > 0).Select(s => s.CurrentBalance).ToListAsync();
+        var supplierDebt = supplierDebtList.Sum();
+
+        var cashBalanceList = await _context.Cashboxes.Where(c => c.IsActive).Select(c => c.CurrentBalance).ToListAsync();
+        var cashBalance = cashBalanceList.Sum();
 
         var activeDistributors = await _context.Distributors.CountAsync(d => d.IsActive);
         var activeCustomers = await _context.Customers.CountAsync(c => c.IsActive);
 
-        var lowStockAlerts = await _context.Products
-            .Where(p => p.IsActive)
-            .CountAsync(p => _context.InventoryBalances.Where(b => b.ProductId == p.Id).Sum(b => b.QuantityInPieces) <= (p.MinStockAlert * p.UnitsPerCarton));
+        var activeProducts = await _context.Products.Where(p => p.IsActive).ToListAsync();
+        var lowStockAlerts = activeProducts.Count(p =>
+            balances.Where(b => b.ProductId == p.Id).Sum(b => b.QuantityInPieces) <= (p.MinStockAlert * p.UnitsPerCarton));
 
         return new DashboardMetricsDto(
             todaySales,
@@ -78,3 +91,4 @@ public class DashboardService : IDashboardService
         );
     }
 }
+

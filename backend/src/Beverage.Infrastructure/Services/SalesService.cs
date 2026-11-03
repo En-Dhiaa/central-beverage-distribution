@@ -369,3 +369,4 @@ public class SalesService : ISalesService
         return list.OrderBy(e => e.Date).ToList();
     }
 }
+

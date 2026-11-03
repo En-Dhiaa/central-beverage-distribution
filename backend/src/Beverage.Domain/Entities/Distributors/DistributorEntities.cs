@@ -104,3 +104,4 @@ public class DistributorSettlementItem : BaseEntity
     // AvailableQuantityPieces - Sold - Returned - Damaged - Shortage == RemainingQuantityPieces
     public bool IsQuantityBalanced => (AvailableQuantityPieces - SoldQuantityPieces - ReturnedQuantityPieces - DamagedQuantityPieces - ShortageQuantityPieces) == RemainingQuantityPieces;
 }
+

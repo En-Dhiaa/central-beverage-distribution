@@ -305,3 +305,41 @@ public record JournalLineDto(
     decimal Credit,
     string? Description
 );
+
+public record DailyClosingSummaryDto(
+    DateTime BusinessDate,
+    decimal OpeningCash,
+    decimal TotalSalesCash,
+    decimal TotalSalesCredit,
+    decimal TotalPurchasesCash,
+    decimal TotalReceipts,
+    decimal TotalExpenses,
+    decimal ExpectedClosingCash,
+    int PendingDistributorSettlementsCount,
+    decimal OpenCustodyPieces
+);
+
+public record CreateDailyClosingRequest(
+    DateTime BusinessDate,
+    decimal ActualCash,
+    string? Notes
+);
+
+public record DailyClosingDto(
+    Guid Id,
+    string ClosingNumber,
+    DateTime BusinessDate,
+    decimal OpeningCash,
+    decimal TotalSales,
+    decimal TotalPurchases,
+    decimal TotalReceipts,
+    decimal TotalExpenses,
+    decimal ExpectedCash,
+    decimal ActualCash,
+    decimal CashDifference,
+    string Status,
+    string? Notes,
+    DateTime CreatedAt
+);
+
+

@@ -101,3 +101,4 @@ public class BackupJob : AuditableEntity
     public DateTime? CompletedAt { get; set; }
     public string? ErrorMessage { get; set; }
 }
+

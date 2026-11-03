@@ -20,3 +20,4 @@ The system enforces automated backups to safeguard critical operational, financi
 3. Replace active database (`beverage_system.db` or PostgreSQL restore) with verified snapshot.
 4. Restart Backend API service.
 5. Log the restore action in `audit_logs` with the responsible administrator's user ID.
+

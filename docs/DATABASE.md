@@ -46,3 +46,4 @@ The database automatically seeds default records on first run:
 - Initial Supplier: شركة مياه شملان
 - Initial Distributor: موزع الأمانة - صنعاء
 - Initial Customers: بقالة النور, سوبرماركت البركة
+

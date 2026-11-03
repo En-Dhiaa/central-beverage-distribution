@@ -44,3 +44,4 @@ This automatically provisions:
 ## 3. Windows Desktop Executable
 Launch `desktop/dist/windows/CentralBeverageDistribution.exe`.
 This native desktop application connects to the central server and provides native desktop convenience.
+

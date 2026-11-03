@@ -8,6 +8,8 @@ import {
   Cashbox,
   JournalEntry,
   UserProfile,
+  DailyClosingSummary,
+  DailyClosing,
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -228,4 +230,29 @@ export const api = {
     });
     return handleResponse<JournalEntry[]>(res);
   },
+
+  async getDailyClosingSummary(date?: string): Promise<DailyClosingSummary> {
+    const url = date ? `${API_BASE}/finance/daily-closing/summary?date=${date}` : `${API_BASE}/finance/daily-closing/summary`;
+    const res = await fetch(url, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<DailyClosingSummary>(res);
+  },
+
+  async submitDailyClosing(data: { businessDate: string; actualCash: number; notes?: string }) {
+    const res = await fetch(`${API_BASE}/finance/daily-closing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ id: string; message: string }>(res);
+  },
+
+  async getDailyClosingHistory(): Promise<DailyClosing[]> {
+    const res = await fetch(`${API_BASE}/finance/daily-closing/history`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<DailyClosing[]>(res);
+  },
 };
+

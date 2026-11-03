@@ -71,8 +71,15 @@ public class PurchasingService : IPurchasingService
         var supplier = await _context.Suppliers.FindAsync(request.SupplierId)
             ?? throw new InvalidOperationException("المورد غير موجود.");
 
-        var warehouse = await _context.Warehouses.FindAsync(request.WarehouseId)
-            ?? throw new InvalidOperationException("المستودع غير موجود.");
+        var warehouse = request.WarehouseId != Guid.Empty
+            ? await _context.Warehouses.FindAsync(request.WarehouseId)
+            : await _context.Warehouses.FirstOrDefaultAsync(w => w.WarehouseType == WarehouseType.General)
+              ?? await _context.Warehouses.FirstAsync();
+
+        if (warehouse == null)
+            throw new InvalidOperationException("المستودع غير موجود.");
+
+        var warehouseId = warehouse.Id;
 
         if (request.Items == null || !request.Items.Any())
             throw new InvalidOperationException("يجب أن تحتوي فاتورة الشراء على صنف واحد على الأقل.");
@@ -87,7 +94,7 @@ public class PurchasingService : IPurchasingService
             InvoiceNumber = invoiceNumber,
             SupplierInvoiceNumber = request.SupplierInvoiceNumber,
             SupplierId = request.SupplierId,
-            WarehouseId = request.WarehouseId,
+            WarehouseId = warehouseId,
             InvoiceDate = request.InvoiceDate,
             PaymentMethod = Enum.TryParse<PaymentMethod>(request.PaymentMethod, true, out var pm) ? pm : PaymentMethod.Credit,
             Status = DocumentStatus.Approved,
@@ -123,13 +130,13 @@ public class PurchasingService : IPurchasingService
 
             // 1. Update Inventory Balance
             var balance = await _context.InventoryBalances
-                .FirstOrDefaultAsync(b => b.WarehouseId == request.WarehouseId && b.ProductId == itemReq.ProductId);
+                .FirstOrDefaultAsync(b => b.WarehouseId == warehouseId && b.ProductId == itemReq.ProductId);
 
             if (balance == null)
             {
                 balance = new InventoryBalance
                 {
-                    WarehouseId = request.WarehouseId,
+                    WarehouseId = warehouseId,
                     ProductId = itemReq.ProductId,
                     QuantityInPieces = totalPieces
                 };
@@ -145,7 +152,7 @@ public class PurchasingService : IPurchasingService
             {
                 TransactionNumber = $"{invoiceNumber}-{product.Sku}",
                 ProductId = itemReq.ProductId,
-                WarehouseId = request.WarehouseId,
+                WarehouseId = warehouseId,
                 TransactionType = InventoryTransactionType.PurchaseReceipt,
                 QuantityInPieces = totalPieces,
                 UnitCost = itemReq.UnitPricePerCarton / unitsPerCarton,
@@ -252,3 +259,4 @@ public class PurchasingService : IPurchasingService
         return invoice.Id;
     }
 }
+

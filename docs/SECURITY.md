@@ -17,3 +17,4 @@
 - Approved sales invoices, purchase invoices, and journal entries cannot be directly mutated.
 - Reversals and corrections are executed via documented credit notes, return vouchers, or reversing journal entries.
 - Unbalanced accounting entries ($\text{Debit} \neq \text{Credit}$) are rejected by domain constraints.
+

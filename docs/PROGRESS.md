@@ -48,6 +48,23 @@
   - Visual reports center.
   - Print layout & PDF export ready.
 
+- [x] **Phase 7 — End-of-Day Operations & Real-Time SignalR**
+  - Daily closing calculation & reconciliation (إغلاق اليومية والترحيل المحاسبي).
+  - Cash difference audit ledger (مطابقة الفعلي والدفتري).
+  - SignalR notification hub at `/hubs/notifications` for live stock alerts.
+  - Automatic reconnection and state synchronization.
+
+- [x] **Phase 8 — Comprehensive Testing & Verification**
+  - 100% test pass rate across unit tests and end-to-end integration test suite.
+  - Complete 9-step business workflow verified from supplier purchase to daily closing.
+  - SQLite decimal translator compatibility resolved for cross-platform zero-dependency execution.
+  - Isolated dynamic test database fixtures.
+
+- [x] **Phase 9 — Windows Desktop Executable & Deployment**
+  - Native Windows executable published: `desktop/dist/windows/CentralBeverageDistribution.exe`.
+  - Production-ready `docker-compose.yml` with PostgreSQL, ASP.NET Core 8 Web API, and Nginx.
+  - Continuous deployment and milestone commit synchronization.
+
 - [x] **Phase 7 — Desktop Windows Application**
   - Built native Windows executable: `CentralBeverageDistribution.exe`.
   - Tauri 2 configuration.
@@ -55,3 +72,4 @@
 - [x] **Phase 8 — Verification, Security & Release**
   - Unit tests & integration tests passing.
   - Documentation complete.
+

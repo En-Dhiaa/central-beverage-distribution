@@ -204,27 +204,42 @@ public class InventoryService : IInventoryService
         // Total dispatched to distributor
         var dispatchedQuery = _context.DistributorDispatchItems
             .Include(d => d.DistributorDispatch)
-            .Where(i => i.ProductId == productId && i.DistributorDispatch!.Status == DocumentStatus.Approved);
+            .Where(i => i.DistributorDispatch!.Status == DocumentStatus.Approved);
+
+        if (productId != Guid.Empty)
+        {
+            dispatchedQuery = dispatchedQuery.Where(i => i.ProductId == productId);
+        }
 
         if (distributorId != Guid.Empty)
         {
             dispatchedQuery = dispatchedQuery.Where(i => i.DistributorDispatch!.DistributorId == distributorId);
         }
 
-        var totalDispatchedPieces = await dispatchedQuery.SumAsync(i => i.TotalPieces);
+        var dispatchedList = await dispatchedQuery.Select(i => i.TotalPieces).ToListAsync();
+        var totalDispatchedPieces = dispatchedList.Sum();
 
         // Deduct sold & returned via settlements
         var settledQuery = _context.DistributorSettlementItems
             .Include(s => s.DistributorSettlement)
-            .Where(s => s.ProductId == productId && s.DistributorSettlement!.Status == DocumentStatus.Approved);
+            .Where(s => s.DistributorSettlement!.Status == DocumentStatus.Approved);
+
+        if (productId != Guid.Empty)
+        {
+            settledQuery = settledQuery.Where(s => s.ProductId == productId);
+        }
 
         if (distributorId != Guid.Empty)
         {
             settledQuery = settledQuery.Where(s => s.DistributorSettlement!.DistributorId == distributorId);
         }
 
-        var totalSettledOffPieces = await settledQuery.SumAsync(s => s.SoldQuantityPieces + s.ReturnedQuantityPieces + s.DamagedQuantityPieces + s.ShortageQuantityPieces);
+        var settledList = await settledQuery
+            .Select(s => s.SoldQuantityPieces + s.ReturnedQuantityPieces + s.DamagedQuantityPieces + s.ShortageQuantityPieces)
+            .ToListAsync();
+        var totalSettledOffPieces = settledList.Sum();
 
         return Math.Max(0, totalDispatchedPieces - totalSettledOffPieces);
     }
 }
+

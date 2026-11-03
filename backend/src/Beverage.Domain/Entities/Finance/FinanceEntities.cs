@@ -132,3 +132,4 @@ public class DailyClosing : AuditableEntity
     public Guid? ApprovedBy { get; set; }
     public string? Notes { get; set; }
 }
+

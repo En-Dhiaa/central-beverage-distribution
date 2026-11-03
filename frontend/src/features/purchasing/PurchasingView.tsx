@@ -379,3 +379,4 @@ export const PurchasingView: React.FC = () => {
     </div>
   );
 };
+

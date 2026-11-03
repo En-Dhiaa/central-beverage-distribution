@@ -54,4 +54,8 @@ public interface IFinanceService
     Task<Guid> CreatePaymentVoucherAsync(PaymentVoucherRequest request, Guid userId);
     Task<Guid> CreateExpenseAsync(ExpenseRequest request, Guid userId);
     Task<List<JournalEntryDto>> GetJournalEntriesAsync();
+    Task<DailyClosingSummaryDto> GetDailyClosingSummaryAsync(DateTime businessDate);
+    Task<Guid> SubmitDailyClosingAsync(CreateDailyClosingRequest request, Guid userId);
+    Task<List<DailyClosingDto>> GetDailyClosingsAsync();
 }
+

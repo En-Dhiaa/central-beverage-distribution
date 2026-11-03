@@ -126,3 +126,35 @@ export interface JournalEntry {
     description?: string;
   }[];
 }
+
+export interface DailyClosingSummary {
+  businessDate: string;
+  openingCash: number;
+  totalSalesCash: number;
+  totalSalesCredit: number;
+  totalPurchasesCash: number;
+  totalReceipts: number;
+  totalExpenses: number;
+  expectedClosingCash: number;
+  pendingDistributorSettlementsCount: number;
+  openCustodyPieces: number;
+}
+
+export interface DailyClosing {
+  id: string;
+  closingNumber: string;
+  businessDate: string;
+  openingCash: number;
+  totalSales: number;
+  totalPurchases: number;
+  totalReceipts: number;
+  totalExpenses: number;
+  expectedCash: number;
+  actualCash: number;
+  cashDifference: number;
+  status: string;
+  notes?: string;
+  createdAt: string;
+}
+
+

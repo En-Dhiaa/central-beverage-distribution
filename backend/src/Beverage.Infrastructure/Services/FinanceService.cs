@@ -10,10 +10,12 @@ namespace Beverage.Infrastructure.Services;
 public class FinanceService : IFinanceService
 {
     private readonly BeverageDbContext _context;
+    private readonly IInventoryService _inventoryService;
 
-    public FinanceService(BeverageDbContext context)
+    public FinanceService(BeverageDbContext context, IInventoryService inventoryService)
     {
         _context = context;
+        _inventoryService = inventoryService;
     }
 
     public async Task<List<CashboxDto>> GetCashboxesAsync()
@@ -303,4 +305,134 @@ public class FinanceService : IFinanceService
             )).ToList()
         )).ToList();
     }
+
+    public async Task<DailyClosingSummaryDto> GetDailyClosingSummaryAsync(DateTime businessDate)
+    {
+        var startOfDay = businessDate.Date;
+        var endOfDay = startOfDay.AddDays(1);
+
+        // Previous closing cash or initial cashboxes opening
+        var prevClosing = await _context.DailyClosings
+            .Where(c => c.BusinessDate < startOfDay && c.Status == DocumentStatus.Approved)
+            .OrderByDescending(c => c.BusinessDate)
+            .FirstOrDefaultAsync();
+
+        var cashboxesList = await _context.Cashboxes.Where(c => c.IsActive).Select(c => c.OpeningBalance).ToListAsync();
+        var openingCash = prevClosing != null 
+            ? prevClosing.ActualCash 
+            : cashboxesList.Sum();
+
+        var cashSalesList = await _context.SalesInvoices
+            .Where(s => s.InvoiceDate >= startOfDay && s.InvoiceDate < endOfDay && s.Status == DocumentStatus.Approved)
+            .Select(s => s.PaidAmount)
+            .ToListAsync();
+        var totalSalesCash = cashSalesList.Sum();
+
+        var creditSalesList = await _context.SalesInvoices
+            .Where(s => s.InvoiceDate >= startOfDay && s.InvoiceDate < endOfDay && s.Status == DocumentStatus.Approved)
+            .Select(s => s.RemainingAmount)
+            .ToListAsync();
+        var totalSalesCredit = creditSalesList.Sum();
+
+        var cashPurchasesList = await _context.PurchaseInvoices
+            .Where(p => p.InvoiceDate >= startOfDay && p.InvoiceDate < endOfDay && p.Status == DocumentStatus.Approved)
+            .Select(p => p.PaidAmount)
+            .ToListAsync();
+        var totalPurchasesCash = cashPurchasesList.Sum();
+
+        var receiptsList = await _context.PaymentVouchers
+            .Where(v => v.PaymentDate >= startOfDay && v.PaymentDate < endOfDay && v.VoucherType == VoucherType.Receipt && v.Status == DocumentStatus.Approved)
+            .Select(v => v.Amount)
+            .ToListAsync();
+        var totalReceipts = receiptsList.Sum();
+
+        var expensesList = await _context.Expenses
+            .Where(e => e.ExpenseDate >= startOfDay && e.ExpenseDate < endOfDay)
+            .Select(e => e.Amount)
+            .ToListAsync();
+        var totalExpenses = expensesList.Sum();
+
+        var pendingSettlements = await _context.DistributorSettlements
+            .CountAsync(s => s.BusinessDate >= startOfDay && s.BusinessDate < endOfDay && s.Status == DocumentStatus.Draft);
+
+        var openCustody = await _inventoryService.GetDistributorCustodyPiecesAsync(Guid.Empty, Guid.Empty);
+
+        var expectedCash = openingCash + totalSalesCash + totalReceipts - totalPurchasesCash - totalExpenses;
+
+        return new DailyClosingSummaryDto(
+            startOfDay,
+            openingCash,
+            totalSalesCash,
+            totalSalesCredit,
+            totalPurchasesCash,
+            totalReceipts,
+            totalExpenses,
+            expectedCash,
+            pendingSettlements,
+            openCustody
+        );
+    }
+
+    public async Task<Guid> SubmitDailyClosingAsync(CreateDailyClosingRequest request, Guid userId)
+    {
+        var targetDate = request.BusinessDate.Date;
+        var existing = await _context.DailyClosings
+            .FirstOrDefaultAsync(c => c.BusinessDate == targetDate && c.Status == DocumentStatus.Approved);
+
+        if (existing != null)
+            throw new InvalidOperationException($"تم إغلاق يوم {targetDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)} مسبقاً برقم {existing.ClosingNumber}.");
+
+        var summary = await GetDailyClosingSummaryAsync(targetDate);
+
+        var closingNumber = $"CLS-{targetDate.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
+
+        var closing = new DailyClosing
+        {
+            ClosingNumber = closingNumber,
+            BusinessDate = targetDate,
+            OpeningCash = summary.OpeningCash,
+            TotalSales = summary.TotalSalesCash + summary.TotalSalesCredit,
+            TotalPurchases = summary.TotalPurchasesCash,
+            TotalReceipts = summary.TotalReceipts,
+            TotalExpenses = summary.TotalExpenses,
+            ExpectedCash = summary.ExpectedClosingCash,
+            ActualCash = request.ActualCash,
+            Status = DocumentStatus.Approved,
+            ClosedBy = userId,
+            ApprovedBy = userId,
+            Notes = request.Notes,
+            CreatedBy = userId
+        };
+
+        await _context.DailyClosings.AddAsync(closing);
+        await _context.SaveChangesAsync();
+
+        return closing.Id;
+    }
+
+    public async Task<List<DailyClosingDto>> GetDailyClosingsAsync()
+    {
+        var closings = await _context.DailyClosings
+            .OrderByDescending(c => c.BusinessDate)
+            .Take(30)
+            .ToListAsync();
+
+        return closings.Select(c => new DailyClosingDto(
+            c.Id,
+            c.ClosingNumber,
+            c.BusinessDate,
+            c.OpeningCash,
+            c.TotalSales,
+            c.TotalPurchases,
+            c.TotalReceipts,
+            c.TotalExpenses,
+            c.ExpectedCash,
+            c.ActualCash,
+            c.CashDifference,
+            c.Status.ToString(),
+            c.Notes,
+            c.CreatedAt
+        )).ToList();
+    }
 }
+

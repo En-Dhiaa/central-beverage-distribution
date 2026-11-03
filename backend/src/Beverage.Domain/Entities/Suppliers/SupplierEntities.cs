@@ -104,3 +104,4 @@ public class PurchaseReturnItem : BaseEntity
     public decimal UnitPrice { get; set; }
     public decimal Total { get; set; }
 }
+

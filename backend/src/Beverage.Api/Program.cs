@@ -64,17 +64,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 4. CORS
+// 4. CORS & Real-time SignalR
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -135,6 +137,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<Beverage.Api.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();
 

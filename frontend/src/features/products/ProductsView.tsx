@@ -375,3 +375,4 @@ export const ProductsView: React.FC = () => {
     </div>
   );
 };
+

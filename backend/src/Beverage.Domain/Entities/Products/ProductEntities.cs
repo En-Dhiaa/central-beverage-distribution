@@ -84,3 +84,4 @@ public class ProductCostHistory : BaseEntity
     public DateTime EffectiveAt { get; set; } = DateTime.UtcNow;
     public Guid? PurchaseDocumentId { get; set; }
 }
+

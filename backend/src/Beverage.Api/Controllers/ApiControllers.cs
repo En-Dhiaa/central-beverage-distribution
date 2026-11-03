@@ -339,4 +339,42 @@ public class FinanceController : ControllerBase
         var entries = await _financeService.GetJournalEntriesAsync();
         return Ok(entries);
     }
+
+    [HttpGet("daily-closing/summary")]
+    public async Task<IActionResult> GetDailyClosingSummary([FromQuery] string? date)
+    {
+        var targetDate = DateTime.UtcNow.Date;
+        if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+        {
+            targetDate = parsed.Date;
+        }
+
+        var summary = await _financeService.GetDailyClosingSummaryAsync(targetDate);
+        return Ok(summary);
+    }
+
+    [HttpPost("daily-closing")]
+    public async Task<IActionResult> SubmitDailyClosing([FromBody] CreateDailyClosingRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var id = await _financeService.SubmitDailyClosingAsync(request, userId);
+            return Ok(new { id, message = "تم اعتماد إغلاق اليومية بنجاح وقفل العمليات." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("daily-closing/history")]
+    public async Task<IActionResult> GetDailyClosingHistory()
+    {
+        var closings = await _financeService.GetDailyClosingsAsync();
+        return Ok(closings);
+    }
 }
+

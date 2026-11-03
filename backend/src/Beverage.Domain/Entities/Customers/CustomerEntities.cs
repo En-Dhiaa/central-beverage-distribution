@@ -33,3 +33,4 @@ public class CustomerDistributorHistory : BaseEntity
     public DateTime? AssignedTo { get; set; }
     public string? Notes { get; set; }
 }
+

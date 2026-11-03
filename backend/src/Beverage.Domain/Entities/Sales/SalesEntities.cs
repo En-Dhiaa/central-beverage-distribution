@@ -85,3 +85,4 @@ public class SalesReturnItem : BaseEntity
     public decimal Total { get; set; }
     public string? Reason { get; set; }
 }
+

@@ -59,3 +59,4 @@ Beverage.Api (ASP.NET Core Web API, JWT middleware, Swagger, CORS, DI)
 - JWT Bearer Authentication with HMAC-SHA256 signature.
 - Role-based and action-based authorization.
 - Tamper-evident audit logging for sensitive actions.
+
