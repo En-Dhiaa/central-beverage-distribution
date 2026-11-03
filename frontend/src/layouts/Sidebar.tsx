@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../stores/uiStore';
 import { useAuthStore } from '../stores/authStore';
+import { useBrandStore } from '../stores/brandStore';
 import {
   LayoutDashboard,
   Package,
@@ -24,12 +25,15 @@ import {
   Clock,
   ShieldCheck,
   Database,
+  FileCheck,
+  RotateCcw,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { activeNav, setActiveNav, isSidebarOpen, toggleSidebar } = useUIStore();
   const { user, logout } = useAuthStore();
+  const { profile } = useBrandStore();
   const isRtl = i18n.language === 'ar';
 
   const navItems = [
@@ -42,7 +46,9 @@ export const Sidebar: React.FC = () => {
     { id: 'distributors', label: t('distributors'), icon: Truck },
     { id: 'customers', label: t('customers'), icon: Store },
     { id: 'debt', label: t('debt'), icon: BadgePercent, badge: 'متابعة' },
+    { id: 'quotations', label: 'عروض الأسعار', icon: FileCheck },
     { id: 'sales', label: t('sales'), icon: Receipt },
+    { id: 'returns', label: 'مردودات المبيعات', icon: RotateCcw },
     { id: 'finance', label: t('finance'), icon: Wallet },
     { id: 'closings', label: t('closings'), icon: CalendarClock },
     { id: 'reports', label: t('reports'), icon: FileBarChart },
@@ -61,16 +67,23 @@ export const Sidebar: React.FC = () => {
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-border">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
-            <Snowflake className="h-5 w-5 animate-pulse" />
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md"
+            style={{ backgroundColor: profile.primaryColor || '#2563eb' }}
+          >
+            {profile.logoBase64 ? (
+              <img src={profile.logoBase64} alt="Logo" className="h-7 w-7 object-contain" />
+            ) : (
+              <Snowflake className="h-5 w-5 animate-pulse" />
+            )}
           </div>
           {isSidebarOpen && (
             <div className="flex flex-col truncate">
               <span className="text-sm font-bold tracking-tight text-foreground truncate">
-                {t('appName')}
+                {profile.companyNameAr || t('appName')}
               </span>
               <span className="text-[10px] text-muted-foreground truncate font-medium">
-                الثلاجة المركزية والتوزيع
+                {profile.slogan || 'الثلاجة المركزية والتوزيع'}
               </span>
             </div>
           )}

@@ -52,6 +52,7 @@ backups/*
 # Releases & Distribution Binaries
 release/payload/
 release/dist/
+release/installer_out/
 release/*.exe
 *.zip
 

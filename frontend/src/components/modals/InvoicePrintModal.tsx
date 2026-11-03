@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { SalesInvoicePrint } from '../../types';
+import { useBrandStore } from '../../stores/brandStore';
 import { tafqeetRial } from '../../utils/tafqeet';
-import { Printer, X, Snowflake, CheckCircle2 } from 'lucide-react';
+import { Printer, X, Snowflake, CheckCircle2, Building2 } from 'lucide-react';
 
 interface Props {
   invoice: SalesInvoicePrint;
@@ -9,7 +10,14 @@ interface Props {
 }
 
 export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
-  const [paperSize, setPaperSize] = useState<'80mm' | 'A4' | 'A5'>('80mm');
+  const { profile } = useBrandStore();
+  const [paperSize, setPaperSize] = useState<'80mm' | 'A4' | 'A5'>(
+    profile.defaultPrintSize?.toLowerCase() === 'a4'
+      ? 'A4'
+      : profile.defaultPrintSize?.toLowerCase() === 'a5'
+      ? 'A5'
+      : '80mm'
+  );
 
   const handlePrint = () => {
     window.print();
@@ -23,9 +31,11 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
     minute: '2-digit',
   });
 
+  const primaryCol = profile.primaryColor || '#2563eb';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-3xl rounded-2xl bg-card border border-border shadow-2xl overflow-hidden my-6">
+      <div className="relative w-full max-w-3xl rounded-3xl bg-card border border-border shadow-2xl overflow-hidden my-6">
         {/* Modal Controls Bar (Hidden during print) */}
         <div className="no-print flex items-center justify-between px-6 py-4 border-b border-border bg-muted/40">
           <div className="flex items-center gap-3">
@@ -98,17 +108,32 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
             {/* Enterprise Header */}
             <div className="text-center border-b pb-4 mb-4 border-slate-300">
               <div className="flex justify-center items-center gap-2 mb-1">
-                <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm">
-                  ❄
-                </div>
+                {profile.logoBase64 && profile.showLogo ? (
+                  <img src={profile.logoBase64} alt="شعار المؤسسة" className="h-10 w-auto object-contain" />
+                ) : (
+                  <div
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-white font-black text-sm shadow-sm"
+                    style={{ backgroundColor: primaryCol }}
+                  >
+                    ❄
+                  </div>
+                )}
                 <h1 className="text-base font-black tracking-tight text-slate-900">
-                  مؤسسة توزيع المياه والعصائر المركزية
+                  {profile.companyNameAr}
                 </h1>
               </div>
               <p className="text-[10px] text-slate-600 font-bold">
-                الثلاجة المركزية للتبريد والتوزيع بالجملة — صنعاء | ت: 777000111
+                {profile.slogan} — {profile.address} | ت: {profile.phone || profile.mobile}
               </p>
-              <div className="inline-block mt-2 px-3 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-[11px] font-black">
+              {profile.showTaxNumber && (
+                <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                  السجل التجاري: {profile.commercialRegistration} • الرقم الضريبي: {profile.taxNumber}
+                </p>
+              )}
+              <div
+                className="inline-block mt-2 px-3 py-0.5 rounded-full text-[11px] font-black text-white"
+                style={{ backgroundColor: primaryCol }}
+              >
                 {invoice.paymentMethod === 'Cash' ? 'فاتورة مبيعات نقدية' : 'فاتورة مبيعات آجلة'}
               </div>
             </div>
@@ -117,7 +142,9 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
             <div className="grid grid-cols-2 gap-2 text-[11px] mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
               <div>
                 <span className="text-slate-500 font-bold">رقم الفاتورة: </span>
-                <span className="font-mono font-black text-slate-900">{invoice.invoiceNumber}</span>
+                <span className="font-mono font-black" style={{ color: primaryCol }}>
+                  {invoice.invoiceNumber}
+                </span>
               </div>
               <div className="text-left" dir="ltr">
                 <span className="text-slate-500 font-bold">:التاريخ </span>
@@ -149,12 +176,15 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
 
             {/* Items Table */}
             <table className="w-full text-right text-[11px] border border-slate-300 mb-4">
-              <thead className="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
+              <thead
+                className="border-b border-slate-300 font-bold text-white"
+                style={{ backgroundColor: primaryCol }}
+              >
                 <tr>
-                  <th className="p-2 border-l border-slate-300">م</th>
-                  <th className="p-2 border-l border-slate-300">الصنف</th>
-                  <th className="p-2 border-l border-slate-300 text-center">الكمية</th>
-                  <th className="p-2 border-l border-slate-300 text-center">سعر الكرتون</th>
+                  <th className="p-2 border-l border-white/20">م</th>
+                  <th className="p-2 border-l border-white/20">الصنف</th>
+                  <th className="p-2 border-l border-white/20 text-center">الكمية</th>
+                  <th className="p-2 border-l border-white/20 text-center">سعر الكرتون</th>
                   <th className="p-2 text-left">الإجمالي</th>
                 </tr>
               </thead>
@@ -181,7 +211,9 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
             <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 space-y-1.5 text-[11px] mb-4">
               <div className="flex justify-between items-center text-xs font-black">
                 <span className="text-slate-700">إجمالي الفاتورة:</span>
-                <span className="font-mono text-blue-700">{invoice.totalAmount.toLocaleString()} ريال</span>
+                <span className="font-mono" style={{ color: primaryCol }}>
+                  {invoice.totalAmount.toLocaleString()} ريال
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-600">المبلغ المدفوع نقدًا:</span>
@@ -196,20 +228,28 @@ export const InvoicePrintModal: React.FC<Props> = ({ invoice, onClose }) => {
               </div>
             </div>
 
+            {/* Bank details & Terms */}
+            {profile.showBankDetails && profile.bankAccounts && (
+              <div className="mb-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] text-slate-600">
+                <span className="font-bold text-slate-800">الحسابات البنكية المعتمدة: </span>
+                <span>{profile.bankAccounts}</span>
+              </div>
+            )}
+
             {/* Signatures & Barcode */}
-            <div className="pt-4 border-t border-slate-300 text-[10px] text-slate-600">
-              <div className="flex justify-between items-end mb-6">
+            <div className="pt-3 border-t border-slate-300 text-[10px] text-slate-600">
+              <div className="flex justify-between items-end mb-4">
                 <div className="text-center w-1/3">
-                  <div className="border-b border-dashed border-slate-400 h-6 mb-1"></div>
+                  <div className="border-b border-dashed border-slate-400 h-5 mb-1"></div>
                   <span>توقيع المستلم / العميل</span>
                 </div>
                 <div className="text-center w-1/3">
-                  <div className="border-b border-dashed border-slate-400 h-6 mb-1"></div>
+                  <div className="border-b border-dashed border-slate-400 h-5 mb-1"></div>
                   <span>أمين الصندوق / الموزع</span>
                 </div>
               </div>
               <div className="text-center text-[9px] text-slate-500 font-mono">
-                * شكرًا لتعاملكم معنا | يرجى مراجعة الأصناف ومطابقتها قبل مغادرة الموزع *
+                * {profile.invoiceTerms || 'شكرًا لتعاملكم معنا | يرجى مراجعة الأصناف ومطابقتها قبل مغادرة الموزع'} *
               </div>
             </div>
           </div>

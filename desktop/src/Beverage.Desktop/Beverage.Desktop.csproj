@@ -10,6 +10,7 @@
     <AssemblyName>CentralBeverageDistribution</AssemblyName>
     <RootNamespace>Beverage.Desktop</RootNamespace>
     <StartupObject>Beverage.Desktop.Program</StartupObject>
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

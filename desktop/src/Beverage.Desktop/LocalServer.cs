@@ -30,6 +30,25 @@ public static class LocalServer
 
             // 1. Setup Persistent Dedicated Data Directory
             var dataDir = Path.Combine(baseDir, "Data");
+            var initConfigPath = Path.Combine(baseDir, "init_config.json");
+            if (File.Exists(initConfigPath))
+            {
+                try
+                {
+                    var json = File.ReadAllText(initConfigPath);
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("DataVaultPath", out var dvProp) && !string.IsNullOrWhiteSpace(dvProp.GetString()))
+                    {
+                        dataDir = dvProp.GetString()!;
+                        Program.Log($"LocalServer: Using custom DataVaultPath from init_config.json: {dataDir}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Program.Log($"LocalServer: Error reading init_config.json: {ex.Message}");
+                }
+            }
+
             Directory.CreateDirectory(dataDir);
             Directory.CreateDirectory(Path.Combine(dataDir, "invoices"));
             Directory.CreateDirectory(Path.Combine(dataDir, "reports"));
@@ -85,6 +104,9 @@ public static class LocalServer
             builder.Services.AddScoped<IWorkerService, WorkerService>();
             builder.Services.AddScoped<IActivityService, ActivityService>();
             builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+            builder.Services.AddScoped<IBrandSettingsService, BrandSettingsService>();
+            builder.Services.AddScoped<IQuotationService, QuotationService>();
+            builder.Services.AddScoped<ISalesReturnService, SalesReturnService>();
 
             // 5. JWT Authentication
             var jwtSecret = "super_secret_beverage_management_key_change_in_production_min_32_chars!";

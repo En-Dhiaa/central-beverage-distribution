@@ -13,10 +13,12 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Payload.zip" />
+    <EmbeddedResource Include="app.ico" />
   </ItemGroup>
 
 </Project>

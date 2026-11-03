@@ -53,6 +53,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+builder.Services.AddScoped<IBrandSettingsService, BrandSettingsService>();
+builder.Services.AddScoped<IQuotationService, QuotationService>();
+builder.Services.AddScoped<ISalesReturnService, SalesReturnService>();
 
 // 3. JWT Authentication
 var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "super_secret_beverage_management_key_change_in_production_min_32_chars!";

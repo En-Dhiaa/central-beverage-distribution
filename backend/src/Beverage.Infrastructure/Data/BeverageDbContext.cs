@@ -67,6 +67,8 @@ public class BeverageDbContext : DbContext
     public DbSet<SalesInvoiceItem> SalesInvoiceItems => Set<SalesInvoiceItem>();
     public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
     public DbSet<SalesReturnItem> SalesReturnItems => Set<SalesReturnItem>();
+    public DbSet<Quotation> Quotations => Set<Quotation>();
+    public DbSet<QuotationItem> QuotationItems => Set<QuotationItem>();
 
     // Finance & Accounting
     public DbSet<Account> Accounts => Set<Account>();

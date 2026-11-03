@@ -86,3 +86,34 @@ public class SalesReturnItem : BaseEntity
     public string? Reason { get; set; }
 }
 
+public class Quotation : AuditableEntity
+{
+    public string QuotationNumber { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
+    public Customer? Customer { get; set; }
+    public DateTime QuotationDate { get; set; } = DateTime.UtcNow;
+    public DateTime ValidUntil { get; set; } = DateTime.UtcNow.AddDays(15);
+    public decimal Subtotal { get; set; }
+    public decimal Discount { get; set; }
+    public decimal Total { get; set; }
+    public string Status { get; set; } = "Active"; // Active, Accepted, Rejected, Converted
+    public Guid? ConvertedSalesInvoiceId { get; set; }
+    public string? Notes { get; set; }
+    public string? TermsAndConditions { get; set; }
+
+    public ICollection<QuotationItem> Items { get; set; } = new List<QuotationItem>();
+}
+
+public class QuotationItem : BaseEntity
+{
+    public Guid QuotationId { get; set; }
+    public Quotation? Quotation { get; set; }
+    public Guid ProductId { get; set; }
+    public Product? Product { get; set; }
+    public decimal QuantityCartons { get; set; }
+    public decimal QuantityPieces { get; set; }
+    public decimal UnitPricePerCarton { get; set; }
+    public decimal Discount { get; set; }
+    public decimal Total { get; set; }
+}
+

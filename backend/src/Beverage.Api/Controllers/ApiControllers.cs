@@ -613,4 +613,130 @@ public class DatabaseController : ControllerBase
 
 public record RestoreBackupRequest(string FileName);
 
+[ApiController]
+[Route("api/v1/settings/company")]
+public class BrandSettingsController : ControllerBase
+{
+    private readonly IBrandSettingsService _brandService;
+
+    public BrandSettingsController(IBrandSettingsService brandService)
+    {
+        _brandService = brandService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetProfile()
+    {
+        var profile = await _brandService.GetCompanyProfileAsync();
+        return Ok(profile);
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateCompanyProfileRequest request)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Guid.TryParse(userIdStr, out var userId);
+
+        var profile = await _brandService.UpdateCompanyProfileAsync(request, userId);
+        return Ok(profile);
+    }
+}
+
+[ApiController]
+[Route("api/v1/customers/quotations")]
+public class QuotationsController : ControllerBase
+{
+    private readonly IQuotationService _quotationService;
+
+    public QuotationsController(IQuotationService quotationService)
+    {
+        _quotationService = quotationService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetQuotations()
+    {
+        var list = await _quotationService.GetQuotationsAsync();
+        return Ok(list);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetQuotationById(Guid id)
+    {
+        var q = await _quotationService.GetQuotationByIdAsync(id);
+        if (q == null) return NotFound(new { message = "عرض السعر غير موجود." });
+        return Ok(q);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateQuotation([FromBody] CreateQuotationRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var q = await _quotationService.CreateQuotationAsync(request, userId);
+            return Ok(q);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/convert-to-invoice")]
+    public async Task<IActionResult> ConvertToInvoice(Guid id)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var invoiceId = await _quotationService.ConvertToInvoiceAsync(id, userId);
+            return Ok(new { invoiceId, message = "تم تحويل عرض السعر إلى فاتورة مبيعات معتمدة بنجاح." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}
+
+[ApiController]
+[Route("api/v1/customers/sales/returns")]
+public class SalesReturnsController : ControllerBase
+{
+    private readonly ISalesReturnService _returnService;
+
+    public SalesReturnsController(ISalesReturnService returnService)
+    {
+        _returnService = returnService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetReturns()
+    {
+        var list = await _returnService.GetSalesReturnsAsync();
+        return Ok(list);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateReturn([FromBody] CreateSalesReturnRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var ret = await _returnService.CreateSalesReturnAsync(request, userId);
+            return Ok(ret);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}
+
 

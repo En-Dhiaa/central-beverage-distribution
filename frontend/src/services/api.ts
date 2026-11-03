@@ -412,5 +412,71 @@ export const api = {
     });
     return handleResponse<{ success: boolean; message: string }>(res);
   },
+
+  // Company Profile & Brand Settings
+  async getCompanyProfile(): Promise<any> {
+    const res = await fetch(`${API_BASE}/settings/company`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<any>(res);
+  },
+
+  async updateCompanyProfile(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/settings/company`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  // Quotations (عروض الأسعار)
+  async getQuotations(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/customers/quotations`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<any[]>(res);
+  },
+
+  async getQuotationById(id: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/customers/quotations/${id}`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<any>(res);
+  },
+
+  async createQuotation(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/customers/quotations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  async convertQuotationToInvoice(id: string): Promise<{ invoiceId: string; message: string }> {
+    const res = await fetch(`${API_BASE}/customers/quotations/${id}/convert-to-invoice`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<{ invoiceId: string; message: string }>(res);
+  },
+
+  // Sales Returns (مردودات المبيعات)
+  async getSalesReturns(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/customers/sales/returns`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<any[]>(res);
+  },
+
+  async createSalesReturn(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/customers/sales/returns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
 };
 

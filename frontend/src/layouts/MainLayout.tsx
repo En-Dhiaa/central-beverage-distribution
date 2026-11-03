@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { ToastContainer } from '../components/notifications/ToastContainer';
+import { OnboardingWizardModal } from '../components/modals/OnboardingWizardModal';
 import { useUIStore } from '../stores/uiStore';
 import { DashboardView } from '../features/dashboard/DashboardView';
 import { QuickPOSView } from '../features/sales/QuickPOSView';
@@ -11,7 +13,9 @@ import { WorkersView } from '../features/warehouses/WorkersView';
 import { DistributorsView } from '../features/distributors/DistributorsView';
 import { CustomersView } from '../features/customers/CustomersView';
 import { DebtManagementView } from '../features/finance/DebtManagementView';
+import { QuotationsView } from '../features/sales/QuotationsView';
 import { SalesView } from '../features/sales/SalesView';
+import { SalesReturnsView } from '../features/sales/SalesReturnsView';
 import { FinanceView } from '../features/finance/FinanceView';
 import { ClosingsView } from '../features/finance/ClosingsView';
 import { ReportsView } from '../features/reports/ReportsView';
@@ -22,6 +26,14 @@ import { SettingsView } from '../features/settings/SettingsView';
 
 export const MainLayout: React.FC = () => {
   const { activeNav } = useUIStore();
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    const completed = localStorage.getItem('beverage_onboarding_completed');
+    if (!completed) {
+      setIsOnboardingOpen(true);
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeNav) {
@@ -43,8 +55,12 @@ export const MainLayout: React.FC = () => {
         return <CustomersView />;
       case 'debt':
         return <DebtManagementView />;
+      case 'quotations':
+        return <QuotationsView />;
       case 'sales':
         return <SalesView />;
+      case 'returns':
+        return <SalesReturnsView />;
       case 'finance':
         return <FinanceView />;
       case 'closings':
@@ -81,7 +97,17 @@ export const MainLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Floating Notifications (Toasts) */}
+      <ToastContainer />
+
+      {/* First-Run Onboarding Modal */}
+      {isOnboardingOpen && (
+        <OnboardingWizardModal
+          isOpen={isOnboardingOpen}
+          onClose={() => setIsOnboardingOpen(false)}
+        />
+      )}
     </div>
   );
 };
-

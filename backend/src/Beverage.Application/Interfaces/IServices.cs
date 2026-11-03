@@ -93,3 +93,23 @@ public interface IDatabaseService
     Task<bool> VacuumDatabaseAsync();
 }
 
+public interface IBrandSettingsService
+{
+    Task<CompanyProfileDto> GetCompanyProfileAsync();
+    Task<CompanyProfileDto> UpdateCompanyProfileAsync(UpdateCompanyProfileRequest request, Guid userId);
+}
+
+public interface IQuotationService
+{
+    Task<List<QuotationDto>> GetQuotationsAsync();
+    Task<QuotationDto?> GetQuotationByIdAsync(Guid id);
+    Task<QuotationDto> CreateQuotationAsync(CreateQuotationRequest request, Guid userId);
+    Task<Guid> ConvertToInvoiceAsync(Guid quotationId, Guid userId);
+}
+
+public interface ISalesReturnService
+{
+    Task<List<SalesReturnDto>> GetSalesReturnsAsync();
+    Task<SalesReturnDto> CreateSalesReturnAsync(CreateSalesReturnRequest request, Guid userId);
+}
+

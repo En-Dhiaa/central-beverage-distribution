@@ -295,5 +295,59 @@ export interface SalesInvoicePrintItem {
   totalPrice: number;
 }
 
+export interface Quotation {
+  id: string;
+  quotationNumber: string;
+  quotationDate: string;
+  validUntil: string;
+  customerId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerArea?: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  status: 'Active' | 'Accepted' | 'Rejected' | 'Converted';
+  convertedSalesInvoiceId?: string;
+  notes?: string;
+  termsAndConditions?: string;
+  items: QuotationItem[];
+}
+
+export interface QuotationItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantityCartons: number;
+  quantityPieces: number;
+  unitPricePerCarton: number;
+  discount: number;
+  total: number;
+}
+
+export interface SalesReturn {
+  id: string;
+  returnNumber: string;
+  returnDate: string;
+  customerId: string;
+  customerName: string;
+  salesInvoiceId?: string;
+  salesInvoiceNumber?: string;
+  total: number;
+  returnType: 'Resellable' | 'Damaged';
+  reason?: string;
+  status: string;
+  items: SalesReturnItem[];
+}
+
+export interface SalesReturnItem {
+  productId: string;
+  productName: string;
+  totalPieces: number;
+  unitPrice: number;
+  total: number;
+  reason?: string;
+}
+
 
 

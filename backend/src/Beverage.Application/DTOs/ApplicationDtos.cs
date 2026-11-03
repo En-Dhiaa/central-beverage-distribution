@@ -524,5 +524,147 @@ public record SalesInvoicePrintItemDto(
     decimal TotalPrice
 );
 
+// --- Company Branding & System Setup ---
+public record CompanyProfileDto(
+    string CompanyNameAr,
+    string CompanyNameEn,
+    string Slogan,
+    string CommercialRegistration,
+    string TaxNumber,
+    string Phone,
+    string Mobile,
+    string WhatsApp,
+    string Email,
+    string Website,
+    string Address,
+    string City,
+    string? LogoBase64,
+    string BankAccounts,
+    string InvoiceTerms,
+    string ActiveTemplate,
+    string PrimaryColor,
+    string AccentColor,
+    bool ShowLogo,
+    bool ShowTaxNumber,
+    bool ShowBankDetails,
+    string DefaultPrintSize
+);
+
+public record UpdateCompanyProfileRequest(
+    string CompanyNameAr,
+    string? CompanyNameEn,
+    string? Slogan,
+    string? CommercialRegistration,
+    string? TaxNumber,
+    string? Phone,
+    string? Mobile,
+    string? WhatsApp,
+    string? Email,
+    string? Website,
+    string? Address,
+    string? City,
+    string? LogoBase64,
+    string? BankAccounts,
+    string? InvoiceTerms,
+    string? ActiveTemplate,
+    string? PrimaryColor,
+    string? AccentColor,
+    bool? ShowLogo,
+    bool? ShowTaxNumber,
+    bool? ShowBankDetails,
+    string? DefaultPrintSize
+);
+
+// --- Quotations (عروض الأسعار) ---
+public record QuotationDto(
+    Guid Id,
+    string QuotationNumber,
+    DateTime QuotationDate,
+    DateTime ValidUntil,
+    Guid CustomerId,
+    string CustomerName,
+    string? CustomerPhone,
+    string? CustomerArea,
+    decimal Subtotal,
+    decimal Discount,
+    decimal Total,
+    string Status,
+    Guid? ConvertedSalesInvoiceId,
+    string? Notes,
+    string? TermsAndConditions,
+    List<QuotationItemDto> Items
+);
+
+public record QuotationItemDto(
+    Guid Id,
+    Guid ProductId,
+    string ProductName,
+    decimal QuantityCartons,
+    decimal QuantityPieces,
+    decimal UnitPricePerCarton,
+    decimal Discount,
+    decimal Total
+);
+
+public record CreateQuotationRequest(
+    Guid CustomerId,
+    DateTime QuotationDate,
+    DateTime ValidUntil,
+    string? Notes,
+    string? TermsAndConditions,
+    List<QuotationItemRequest> Items
+);
+
+public record QuotationItemRequest(
+    Guid ProductId,
+    decimal QuantityCartons,
+    decimal QuantityPieces,
+    decimal UnitPricePerCarton,
+    decimal Discount
+);
+
+// --- Sales Returns (مردودات المبيعات) ---
+public record SalesReturnDto(
+    Guid Id,
+    string ReturnNumber,
+    DateTime ReturnDate,
+    Guid CustomerId,
+    string CustomerName,
+    Guid? SalesInvoiceId,
+    string? SalesInvoiceNumber,
+    decimal Total,
+    string ReturnType,
+    string? Reason,
+    string Status,
+    List<SalesReturnItemDto> Items
+);
+
+public record SalesReturnItemDto(
+    Guid ProductId,
+    string ProductName,
+    decimal TotalPieces,
+    decimal UnitPrice,
+    decimal Total,
+    string? Reason
+);
+
+public record CreateSalesReturnRequest(
+    Guid CustomerId,
+    Guid? SalesInvoiceId,
+    Guid? DistributorId,
+    Guid WarehouseId,
+    DateTime ReturnDate,
+    string ReturnType,
+    string? Reason,
+    List<SalesReturnItemRequest> Items
+);
+
+public record SalesReturnItemRequest(
+    Guid ProductId,
+    decimal TotalPieces,
+    decimal UnitPrice,
+    string? Reason
+);
+
 
 
