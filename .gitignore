@@ -51,6 +51,8 @@ backups/*
 
 # Releases & Distribution Binaries
 release/payload/
+release/dist/
+release/*.exe
 *.zip
 
 # OS Generated

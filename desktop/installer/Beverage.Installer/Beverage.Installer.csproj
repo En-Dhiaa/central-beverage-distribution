@@ -8,6 +8,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>CentralBeverageDistribution-Setup</AssemblyName>
     <ApplicationTitle>Central Beverage Distribution Setup</ApplicationTitle>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>

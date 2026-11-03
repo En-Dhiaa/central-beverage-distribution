@@ -9,11 +9,28 @@
     <ApplicationTitle>Central Beverage Distribution</ApplicationTitle>
     <AssemblyName>CentralBeverageDistribution</AssemblyName>
     <RootNamespace>Beverage.Desktop</RootNamespace>
+    <StartupObject>Beverage.Desktop.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\backend\src\Beverage.Domain\Beverage.Domain.csproj" />
+    <ProjectReference Include="..\..\..\backend\src\Beverage.Application\Beverage.Application.csproj" />
+    <ProjectReference Include="..\..\..\backend\src\Beverage.Infrastructure\Beverage.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\backend\src\Beverage.Api\Beverage.Api.csproj" />
   </ItemGroup>
 
 </Project>
-

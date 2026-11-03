@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.WinForms;
@@ -11,148 +9,137 @@ namespace Beverage.Desktop;
 
 static class Program
 {
-    private static Process? _backendProcess;
+    private static readonly string LogFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "desktop_startup.log");
+
+    public static void Log(string message)
+    {
+        try
+        {
+            File.AppendAllText(LogFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}\r\n");
+        }
+        catch { }
+    }
 
     [STAThread]
     static void Main()
     {
-        ApplicationConfiguration.Initialize();
-
-        // 1. Ensure Local Backend API is running
-        StartBackendService();
-
-        var form = new Form
-        {
-            Text = "نظام إدارة وتشغيل ثلاجة المياه والعصائر المركزية | Central Beverage Distribution",
-            Width = 1366,
-            Height = 850,
-            MinimumSize = new Size(1024, 680),
-            StartPosition = FormStartPosition.CenterScreen,
-            WindowState = FormWindowState.Normal
-        };
-
-        var webView = new WebView2
-        {
-            Dock = DockStyle.Fill
-        };
-
-        form.Controls.Add(webView);
-
-        form.Load += async (s, e) =>
-        {
-            var userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CentralBeverageDistribution", "WebView2");
-            var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, userDataFolder);
-            await webView.EnsureCoreWebView2Async(env);
-
-            // Wait for backend health check on local loopback (instant offline)
-            await WaitForBackendReadyAsync("http://127.0.0.1:5000", TimeSpan.FromSeconds(10));
-
-            webView.Source = new Uri("http://127.0.0.1:5000");
-        };
-
-        form.FormClosing += (s, e) =>
-        {
-            StopBackendService();
-        };
-
-        Application.Run(form);
-    }
-
-    private static void StartBackendService()
-    {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(1) };
-            var res = client.GetAsync("http://127.0.0.1:5000/api/v1/auth/me").GetAwaiter().GetResult();
-            // Backend already running on port 5000
-            return;
-        }
-        catch
-        {
-            // Needs to be launched
-        }
+            Log("Application Starting...");
+            ApplicationConfiguration.Initialize();
+            Log("ApplicationConfiguration.Initialize() succeeded.");
 
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string? exeToRun = null;
-        string? args = null;
-        string workingDir = baseDir;
-
-        // Candidate paths for backend API
-        var candidate1 = Path.Combine(baseDir, "api", "Beverage.Api.exe");
-        var candidate2 = Path.Combine(baseDir, "api", "Beverage.Api.dll");
-        var candidate3 = Path.Combine(baseDir, "Beverage.Api.dll");
-        var candidate4 = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "backend", "src", "Beverage.Api", "bin", "Debug", "net8.0", "Beverage.Api.dll"));
-
-        if (File.Exists(candidate1))
-        {
-            exeToRun = candidate1;
-            workingDir = Path.GetDirectoryName(candidate1)!;
-        }
-        else if (File.Exists(candidate2))
-        {
-            exeToRun = "dotnet";
-            args = $"\"{candidate2}\"";
-            workingDir = Path.GetDirectoryName(candidate2)!;
-        }
-        else if (File.Exists(candidate3))
-        {
-            exeToRun = "dotnet";
-            args = $"\"{candidate3}\"";
-            workingDir = baseDir;
-        }
-        else if (File.Exists(candidate4))
-        {
-            exeToRun = "dotnet";
-            args = $"\"{candidate4}\"";
-            workingDir = Path.GetDirectoryName(candidate4)!;
-        }
-
-        if (!string.IsNullOrEmpty(exeToRun))
-        {
-            var psi = new ProcessStartInfo
+            System.Windows.Forms.Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            System.Windows.Forms.Application.ThreadException += (s, e) =>
             {
-                FileName = exeToRun,
-                Arguments = args ?? "",
-                WorkingDirectory = workingDir,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                Log($"System.Windows.Forms.Application.ThreadException: {e.Exception}");
             };
-            psi.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:5000;http://localhost:5000";
-            _backendProcess = Process.Start(psi);
-        }
-    }
 
-    private static async Task WaitForBackendReadyAsync(string url, TimeSpan timeout)
-    {
-        var start = DateTime.UtcNow;
-        using var client = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
-
-        while (DateTime.UtcNow - start < timeout)
-        {
-            try
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                var response = await client.GetAsync(url);
-                if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound || response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                Log($"Unhandled AppDomain Exception: {e.ExceptionObject}");
+            };
+
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                Log($"ProcessExit called! StackTrace:\r\n{Environment.StackTrace}");
+            };
+
+            Log("Creating Form...");
+            var form = new Form
+            {
+                Text = "نظام إدارة وتشغيل ثلاجة المياه والعصائر المركزية | Central Beverage Distribution",
+                Width = 1366,
+                Height = 850,
+                MinimumSize = new Size(1024, 680),
+                StartPosition = FormStartPosition.CenterScreen,
+                WindowState = FormWindowState.Maximized,
+                Icon = SystemIcons.Application
+            };
+            Log("Form created.");
+
+            Log("Creating WebView2 control...");
+            var webView = new WebView2
+            {
+                Dock = DockStyle.Fill
+            };
+            Log("WebView2 control created.");
+
+            webView.NavigationCompleted += (s, e) =>
+            {
+                Log($"WebView2 NavigationCompleted: IsSuccess={e.IsSuccess}, WebErrorStatus={e.WebErrorStatus}");
+            };
+
+            webView.CoreWebView2InitializationCompleted += (s, e) =>
+            {
+                Log($"WebView2 CoreWebView2InitializationCompleted: IsSuccess={e.IsSuccess}, Exception={e.InitializationException}");
+                if (e.IsSuccess)
                 {
-                    return;
+                    webView.CoreWebView2.ProcessFailed += (s2, e2) =>
+                    {
+                        Log($"WebView2 ProcessFailed: Reason={e2.ProcessFailedKind}, ExitCode={e2.ExitCode}");
+                    };
                 }
-            }
-            catch
-            {
-                await Task.Delay(300);
-            }
-        }
-    }
+            };
 
-    private static void StopBackendService()
-    {
-        if (_backendProcess != null && !_backendProcess.HasExited)
-        {
-            try
+            form.Controls.Add(webView);
+
+            form.Load += async (s, e) =>
             {
-                _backendProcess.Kill(true);
-            }
-            catch { }
+                try
+                {
+                    Log("Form_Load: Starting In-Process LocalServer...");
+                    var serverUrl = await LocalServer.StartAsync(5000);
+                    Log($"Form_Load: LocalServer started successfully at {serverUrl}");
+
+                    var userDataFolder = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "CentralBeverageDistribution",
+                        "WebView2"
+                    );
+                    Directory.CreateDirectory(userDataFolder);
+                    Log($"Form_Load: WebView2 userDataFolder: {userDataFolder}");
+
+                    Log("Form_Load: Initializing CoreWebView2Environment...");
+                    var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, userDataFolder);
+                    await webView.EnsureCoreWebView2Async(env);
+                    Log("Form_Load: CoreWebView2 initialized.");
+
+                    webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                    webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
+                    webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+
+                    Log($"Form_Load: Navigating WebView2 to {serverUrl}...");
+                    webView.Source = new Uri(serverUrl);
+                    Log("Form_Load: Navigation triggered.");
+                }
+                catch (Exception ex)
+                {
+                    Log($"Form_Load ERROR: {ex}");
+                    MessageBox.Show(
+                        $"حدث خطأ أثناء تشغيل النظام الداخلي:\n\n{ex.Message}\n\nراجع ملف السجل:\n{LogFile}",
+                        "خطأ تشغيل النظام",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            };
+
+            form.FormClosing += async (s, e) =>
+            {
+                Log("Form_FormClosing: Stopping LocalServer...");
+                await LocalServer.StopAsync();
+                Log("Form_FormClosing: LocalServer stopped.");
+            };
+
+            Log("Entering Application.Run...");
+            System.Windows.Forms.Application.Run(form);
+            Log("Exited Application.Run.");
+        }
+        catch (Exception ex)
+        {
+            Log($"FATAL in Main: {ex}");
+            MessageBox.Show($"خطأ غير متوقع في بدء التطبيق:\n\n{ex.Message}\n\n{ex.StackTrace}", "خطأ فادح", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

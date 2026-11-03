@@ -4,7 +4,8 @@ let connection: signalR.HubConnection | null = null;
 
 export const getSignalRConnection = () => {
   if (!connection) {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || origin;
     const hubUrl = `${baseUrl.replace('/api/v1', '')}/hubs/notifications`;
 
     connection = new signalR.HubConnectionBuilder()
