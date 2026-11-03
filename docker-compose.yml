@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: beverage_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: beverage_management
+      POSTGRES_USER: beverage_admin
+      POSTGRES_PASSWORD: beverage_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beverage_admin -d beverage_management"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: beverage_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      DATABASE_PROVIDER: PostgreSQL
+      DATABASE_CONNECTION_STRING: Host=postgres;Port=5432;Database=beverage_management;Username=beverage_admin;Password=beverage_secure_password_2026
+      JWT_SECRET: super_secure_production_key_central_beverage_distribution_2026!
+      STORAGE_ROOT_PATH: /app/storage
+      BACKUP_ROOT_PATH: /app/backups
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./storage:/app/storage
+      - ./backups:/app/backups
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: beverage_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
+
