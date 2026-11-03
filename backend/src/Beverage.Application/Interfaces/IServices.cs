@@ -46,6 +46,8 @@ public interface ISalesService
     Task<CustomerDto> CreateCustomerAsync(CreateCustomerRequest request, Guid userId);
     Task<Guid> CreateSalesInvoiceAsync(CreateSalesInvoiceRequest request, Guid userId);
     Task<List<CustomerLedgerEntryDto>> GetCustomerLedgerAsync(Guid customerId);
+    Task<SalesInvoicePrintDto?> GetInvoiceForPrintAsync(Guid invoiceId);
+    Task<List<SalesInvoicePrintDto>> GetRecentInvoicesAsync(int limit = 20);
 }
 
 public interface IFinanceService
@@ -57,5 +59,37 @@ public interface IFinanceService
     Task<DailyClosingSummaryDto> GetDailyClosingSummaryAsync(DateTime businessDate);
     Task<Guid> SubmitDailyClosingAsync(CreateDailyClosingRequest request, Guid userId);
     Task<List<DailyClosingDto>> GetDailyClosingsAsync();
+    Task<List<CustomerDebtAgingDto>> GetCustomerDebtAgingAsync();
+    Task<List<PeriodClosingDto>> GetPeriodClosingsAsync();
+    Task<Guid> CreatePeriodClosingAsync(CreatePeriodClosingRequest request, Guid userId);
+}
+
+public interface IUserService
+{
+    Task<List<UserDto>> GetUsersAsync();
+    Task<UserDto> CreateUserAsync(CreateUserRequest request);
+    Task<bool> ToggleUserStatusAsync(Guid userId);
+    Task<List<RoleDto>> GetRolesAsync();
+}
+
+public interface IWorkerService
+{
+    Task<List<WorkerDto>> GetWorkersAsync();
+    Task<WorkerDto> CreateWorkerAsync(CreateWorkerRequest request, Guid userId);
+    Task<Guid> PayWorkerSalaryAsync(PayWorkerSalaryRequest request, Guid userId);
+    Task<List<WorkerSalaryVoucherDto>> GetSalaryVouchersAsync();
+}
+
+public interface IActivityService
+{
+    Task<List<ActivityLogItemDto>> GetDailyActivityLogAsync(DateTime? fromDate = null, DateTime? toDate = null);
+}
+
+public interface IDatabaseService
+{
+    Task<DatabaseStatusDto> GetStatusAsync();
+    Task<string> CreateBackupAsync();
+    Task<bool> RestoreBackupAsync(string backupFileName);
+    Task<bool> VacuumDatabaseAsync();
 }
 

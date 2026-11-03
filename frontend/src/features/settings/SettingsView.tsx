@@ -6,7 +6,7 @@ import { Settings, Palette, Type, Globe, Volume2, ShieldCheck, Database, Save, C
 
 export const SettingsView: React.FC = () => {
   const { t } = useTranslation();
-  const { theme, toggleTheme, language, setLanguage, fontFamily, setFontFamily } = useUIStore();
+  const { theme, toggleTheme, language, setLanguage, fontFamily, setFontFamily, setActiveNav } = useUIStore();
   const { user, updateUserPreferences } = useAuthStore();
 
   const [institutionName, setInstitutionName] = useState('مؤسسة توزيع المياه والعصائر المركزية');
@@ -169,19 +169,27 @@ export const SettingsView: React.FC = () => {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
             <Database className="h-4 w-4 text-primary" />
-            قاعدة البيانات والنسخ الاحتياطي (Automated Backups)
+            قاعدة البيانات وإدارة المستخدمين
           </h3>
           <div className="text-xs text-muted-foreground leading-relaxed">
-            محرك النسخ الاحتياطي مجهز للنسخ التلقائي عند إغلاق اليوم، مع حفظ النسخ المشفرة في مجلد <code className="font-mono text-foreground font-bold">backups/</code>.
+            يمكنك الوصول للتحكم الكامل بقاعدة البيانات والنسخ الاحتياطي واستعادة البيانات، وإدارة حسابات وصلاحيات مستخدمي النظام.
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => alert('تم إنشاء نسخة احتياطية مشفرة بنجاح في مجلد backups/')}
-              className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted/80 border border-border"
+              onClick={() => setActiveNav('database')}
+              className="flex items-center gap-2 rounded-xl bg-primary/10 text-primary border border-primary/20 px-4 py-2.5 text-xs font-bold hover:bg-primary/20 transition-colors"
             >
-              <Database className="h-4 w-4 text-emerald-600" />
-              <span>أخذ نسخة احتياطية فورية الآن</span>
+              <Database className="h-4 w-4" />
+              <span>إدارة قاعدة البيانات والنسخ الاحتياطي</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveNav('users')}
+              className="flex items-center gap-2 rounded-xl bg-muted px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted/80 border border-border transition-colors"
+            >
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span>إدارة مستخدمي النظام والصلاحيات</span>
             </button>
           </div>
         </div>

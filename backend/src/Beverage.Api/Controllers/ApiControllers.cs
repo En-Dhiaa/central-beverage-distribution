@@ -279,6 +279,21 @@ public class CustomersController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("sales/history")]
+    public async Task<IActionResult> GetRecentInvoices([FromQuery] int limit = 30)
+    {
+        var invoices = await _salesService.GetRecentInvoicesAsync(limit);
+        return Ok(invoices);
+    }
+
+    [HttpGet("sales/{id}/print")]
+    public async Task<IActionResult> GetInvoiceForPrint(Guid id)
+    {
+        var invoice = await _salesService.GetInvoiceForPrintAsync(id);
+        if (invoice == null) return NotFound(new { message = "الفاتورة غير موجودة." });
+        return Ok(invoice);
+    }
 }
 
 [ApiController]
@@ -376,5 +391,226 @@ public class FinanceController : ControllerBase
         var closings = await _financeService.GetDailyClosingsAsync();
         return Ok(closings);
     }
+
+    [HttpGet("debt-aging")]
+    public async Task<IActionResult> GetCustomerDebtAging()
+    {
+        var list = await _financeService.GetCustomerDebtAgingAsync();
+        return Ok(list);
+    }
+
+    [HttpGet("period-closings")]
+    public async Task<IActionResult> GetPeriodClosings()
+    {
+        var list = await _financeService.GetPeriodClosingsAsync();
+        return Ok(list);
+    }
+
+    [HttpPost("period-closings")]
+    public async Task<IActionResult> CreatePeriodClosing([FromBody] CreatePeriodClosingRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var id = await _financeService.CreatePeriodClosingAsync(request, userId);
+            return Ok(new { id, message = "تم اعتماد الإقفال الدوري بنجاح وقفل الفترة المحاسبية." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
+
+[ApiController]
+[Route("api/v1/users")]
+public class UsersController : ControllerBase
+{
+    private readonly IUserService _userService;
+
+    public UsersController(IUserService userService)
+    {
+        _userService = userService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _userService.GetUsersAsync();
+        return Ok(users);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+    {
+        try
+        {
+            var user = await _userService.CreateUserAsync(request);
+            return Ok(user);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> ToggleStatus(Guid id)
+    {
+        try
+        {
+            var isActive = await _userService.ToggleUserStatusAsync(id);
+            return Ok(new { isActive, message = isActive ? "تم تفعيل الحساب." : "تم تعطيل الحساب." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("roles")]
+    public async Task<IActionResult> GetRoles()
+    {
+        var roles = await _userService.GetRolesAsync();
+        return Ok(roles);
+    }
+}
+
+[ApiController]
+[Route("api/v1/workers")]
+public class WorkersController : ControllerBase
+{
+    private readonly IWorkerService _workerService;
+
+    public WorkersController(IWorkerService workerService)
+    {
+        _workerService = workerService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetWorkers()
+    {
+        var workers = await _workerService.GetWorkersAsync();
+        return Ok(workers);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateWorker([FromBody] CreateWorkerRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var worker = await _workerService.CreateWorkerAsync(request, userId);
+            return Ok(worker);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("salaries")]
+    public async Task<IActionResult> PaySalary([FromBody] PayWorkerSalaryRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(userIdStr, out var userId);
+
+            var id = await _workerService.PayWorkerSalaryAsync(request, userId);
+            return Ok(new { id, message = "تم صرف راتب العامل وتسجيل قيد المحاسبة بنجاح." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("salaries")]
+    public async Task<IActionResult> GetSalaryVouchers()
+    {
+        var vouchers = await _workerService.GetSalaryVouchersAsync();
+        return Ok(vouchers);
+    }
+}
+
+[ApiController]
+[Route("api/v1/activity")]
+public class ActivityController : ControllerBase
+{
+    private readonly IActivityService _activityService;
+
+    public ActivityController(IActivityService activityService)
+    {
+        _activityService = activityService;
+    }
+
+    [HttpGet("daily")]
+    public async Task<IActionResult> GetDailyActivity([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+    {
+        var log = await _activityService.GetDailyActivityLogAsync(fromDate, toDate);
+        return Ok(log);
+    }
+}
+
+[ApiController]
+[Route("api/v1/database")]
+public class DatabaseController : ControllerBase
+{
+    private readonly IDatabaseService _databaseService;
+
+    public DatabaseController(IDatabaseService databaseService)
+    {
+        _databaseService = databaseService;
+    }
+
+    [HttpGet("status")]
+    public async Task<IActionResult> GetStatus()
+    {
+        var status = await _databaseService.GetStatusAsync();
+        return Ok(status);
+    }
+
+    [HttpPost("backup")]
+    public async Task<IActionResult> CreateBackup()
+    {
+        try
+        {
+            var fileName = await _databaseService.CreateBackupAsync();
+            return Ok(new { fileName, message = "تم إنشاء نسخة احتياطية مشفرة لقاعدة البيانات بنجاح في مجلد backups." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("restore")]
+    public async Task<IActionResult> RestoreBackup([FromBody] RestoreBackupRequest request)
+    {
+        try
+        {
+            var success = await _databaseService.RestoreBackupAsync(request.FileName);
+            return Ok(new { success, message = "تمت استعادة النسخة الاحتياطية بنجاح." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("vacuum")]
+    public async Task<IActionResult> Vacuum()
+    {
+        var success = await _databaseService.VacuumDatabaseAsync();
+        return Ok(new { success, message = "تم ضغط وترتيب مساحة قاعدة البيانات وإعادة بناء الفهارس بنجاح." });
+    }
+}
+
+public record RestoreBackupRequest(string FileName);
+
 

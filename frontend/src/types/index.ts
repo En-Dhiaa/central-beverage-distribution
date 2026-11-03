@@ -157,4 +157,143 @@ export interface DailyClosing {
   createdAt: string;
 }
 
+export interface UserAccount {
+  id: string;
+  username: string;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  roleId: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Worker {
+  id: string;
+  workerCode: string;
+  fullName: string;
+  nationalId?: string;
+  phone: string;
+  jobTitle: string;
+  baseSalary: number;
+  salaryType: string;
+  shiftHours: number;
+  hireDate: string;
+  isActive: boolean;
+  notes?: string;
+}
+
+export type WarehouseWorker = Worker;
+
+export interface WorkerSalaryVoucher {
+  id: string;
+  voucherNumber: string;
+  workerId: string;
+  workerName: string;
+  year: number;
+  month: number;
+  baseSalary: number;
+  bonusAmount: number;
+  deductionsAmount: number;
+  netPaid: number;
+  paymentDate: string;
+  cashboxId: string;
+  cashboxName: string;
+  notes?: string;
+}
+
+export interface PeriodClosing {
+  id: string;
+  closingNumber: string;
+  closingType: string;
+  fiscalYear: number;
+  month?: number;
+  closingDate: string;
+  totalSales: number;
+  totalCostOfGoodsSold: number;
+  grossProfit: number;
+  totalExpenses: number;
+  totalSalaries: number;
+  netProfit: number;
+  isLocked: boolean;
+  notes?: string;
+}
+
+export interface CustomerDebtAging {
+  customerId: string;
+  customerCode: string;
+  customerName: string;
+  phone?: string;
+  area?: string;
+  creditLimit: number;
+  totalDebt: number;
+  current0To30Days: number;
+  overdue31To60Days: number;
+  overdue61To90Days: number;
+  criticalOver90Days: number;
+  lastPaymentDate?: string;
+  debtStatus: string;
+}
+
+export interface ActivityLogItem {
+  timestamp: string;
+  module: string;
+  actionType: string;
+  documentNumber: string;
+  description: string;
+  amount: number;
+  userName: string;
+  status: string;
+}
+
+export interface DatabaseStatus {
+  provider: string;
+  databasePath: string;
+  fileSizeBytes: number;
+  fileSizeMegabytes: number;
+  tablesCount: number;
+  totalRecordsCount: number;
+  lastBackupDate: string;
+  backups: BackupFileInfo[];
+}
+
+export interface BackupFileInfo {
+  fileName: string;
+  fullPath: string;
+  sizeMegabytes: number;
+  createdAt: string;
+}
+
+export interface SalesInvoicePrint {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  customerName: string;
+  customerPhone?: string;
+  customerArea?: string;
+  distributorName?: string;
+  paymentMethod: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  notes: string;
+  items: SalesInvoicePrintItem[];
+}
+
+export interface SalesInvoicePrintItem {
+  productName: string;
+  quantityCartons: number;
+  quantityPieces: number;
+  unitPricePerCarton: number;
+  totalPrice: number;
+}
+
+
 

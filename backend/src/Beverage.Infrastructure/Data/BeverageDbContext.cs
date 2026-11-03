@@ -42,6 +42,8 @@ public class BeverageDbContext : DbContext
     public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
     public DbSet<StockAdjustment> StockAdjustments => Set<StockAdjustment>();
     public DbSet<StockAdjustmentItem> StockAdjustmentItems => Set<StockAdjustmentItem>();
+    public DbSet<WarehouseWorker> WarehouseWorkers => Set<WarehouseWorker>();
+    public DbSet<WorkerSalaryVoucher> WorkerSalaryVouchers => Set<WorkerSalaryVoucher>();
 
     // Suppliers & Purchasing
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -76,6 +78,7 @@ public class BeverageDbContext : DbContext
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<DailyClosing> DailyClosings => Set<DailyClosing>();
+    public DbSet<PeriodClosing> PeriodClosings => Set<PeriodClosing>();
 
     // System
     public DbSet<FixedAsset> FixedAssets => Set<FixedAsset>();

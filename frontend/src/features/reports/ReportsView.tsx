@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileBarChart, Printer, Download, Share2, Calendar, FileText } from 'lucide-react';
+import { FileBarChart, Printer, Download, Share2, Calendar, FileText, Clock } from 'lucide-react';
+import { useUIStore } from '../../stores/uiStore';
 
 export const ReportsView: React.FC = () => {
   const { t } = useTranslation();
+  const { setActiveNav } = useUIStore();
 
   const reportCards = [
     {
@@ -50,13 +52,22 @@ export const ReportsView: React.FC = () => {
             استخراج التقارير التشغيلية والمالية بصيغة PDF قابلة للطباعة والتصدير والمشاركة الفورية
           </p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-all shadow-sm"
-        >
-          <Printer className="h-4 w-4" />
-          <span>طباعة التقرير الشامل</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveNav('activity')}
+            className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all shadow-sm"
+          >
+            <Clock className="h-4 w-4" />
+            <span>سجل الحركة اليومية</span>
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-all shadow-sm"
+          >
+            <Printer className="h-4 w-4" />
+            <span>طباعة التقرير الشامل</span>
+          </button>
+        </div>
       </div>
 
       {/* Reports Grid */}

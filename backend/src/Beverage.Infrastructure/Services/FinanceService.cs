@@ -434,5 +434,154 @@ public class FinanceService : IFinanceService
             c.CreatedAt
         )).ToList();
     }
+
+    public async Task<List<CustomerDebtAgingDto>> GetCustomerDebtAgingAsync()
+    {
+        var customers = await _context.Customers
+            .OrderByDescending(c => c.CurrentBalance)
+            .ToListAsync();
+
+        var allUnpaidInvoices = await _context.SalesInvoices
+            .Where(i => i.PaidAmount < i.Total && i.Status == DocumentStatus.Approved)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var result = new List<CustomerDebtAgingDto>();
+
+        foreach (var c in customers)
+        {
+            var unpaidInvoices = allUnpaidInvoices
+                .Where(i => i.CustomerId == c.Id)
+                .ToList();
+
+            decimal d0_30 = 0, d31_60 = 0, d61_90 = 0, d90plus = 0;
+
+            foreach (var inv in unpaidInvoices)
+            {
+                var unpaidAmount = inv.Total - inv.PaidAmount;
+                var days = (now - inv.InvoiceDate).TotalDays;
+
+                if (days <= 30) d0_30 += unpaidAmount;
+                else if (days <= 60) d31_60 += unpaidAmount;
+                else if (days <= 90) d61_90 += unpaidAmount;
+                else d90plus += unpaidAmount;
+            }
+
+            var categorizedTotal = d0_30 + d31_60 + d61_90 + d90plus;
+            if (c.CurrentBalance > categorizedTotal)
+            {
+                d0_30 += (c.CurrentBalance - categorizedTotal);
+            }
+
+            var lastPayment = await _context.PaymentVouchers
+                .Where(p => p.PartyType == PartyType.Customer && p.PartyId == c.Id)
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => (DateTime?)p.PaymentDate)
+                .FirstOrDefaultAsync();
+
+            string status = c.CurrentBalance <= 0 ? "متزن" :
+                            d90plus > 0 ? "متعثر حرِج" :
+                            d61_90 > 0 ? "متأخر" :
+                            c.CurrentBalance > c.CreditLimit ? "تجاوز السقف" : "جاري منتظم";
+
+            result.Add(new CustomerDebtAgingDto(
+                c.Id,
+                c.CustomerCode,
+                c.Name,
+                c.Phone,
+                c.Area,
+                c.CreditLimit,
+                c.CurrentBalance,
+                d0_30,
+                d31_60,
+                d61_90,
+                d90plus,
+                lastPayment,
+                status
+            ));
+        }
+
+        return result;
+    }
+
+    public async Task<List<PeriodClosingDto>> GetPeriodClosingsAsync()
+    {
+        var list = await _context.PeriodClosings
+            .OrderByDescending(p => p.FiscalYear)
+            .ThenByDescending(p => p.Month)
+            .ToListAsync();
+
+        return list.Select(p => new PeriodClosingDto(
+            p.Id,
+            p.ClosingNumber,
+            p.ClosingType,
+            p.FiscalYear,
+            p.Month,
+            p.ClosingDate,
+            p.TotalSales,
+            p.TotalCostOfGoodsSold,
+            p.GrossProfit,
+            p.TotalExpenses,
+            p.TotalSalaries,
+            p.NetProfit,
+            p.IsLocked,
+            p.Notes
+        )).ToList();
+    }
+
+    public async Task<Guid> CreatePeriodClosingAsync(CreatePeriodClosingRequest request, Guid userId)
+    {
+        DateTime startPeriod, endPeriod;
+        if (request.ClosingType == "Monthly" && request.Month.HasValue)
+        {
+            startPeriod = new DateTime(request.FiscalYear, request.Month.Value, 1, 0, 0, 0, DateTimeKind.Utc);
+            endPeriod = startPeriod.AddMonths(1).AddTicks(-1);
+        }
+        else
+        {
+            startPeriod = new DateTime(request.FiscalYear, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            endPeriod = new DateTime(request.FiscalYear, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+        }
+
+        var totalSales = await _context.SalesInvoices
+            .Where(i => i.InvoiceDate >= startPeriod && i.InvoiceDate <= endPeriod && i.Status == DocumentStatus.Approved)
+            .SumAsync(i => (decimal?)i.Total) ?? 0m;
+
+        var totalCogs = await _context.InventoryTransactions
+            .Where(t => t.TransactionDate >= startPeriod && t.TransactionDate <= endPeriod && t.QuantityOutPieces > 0)
+            .SumAsync(t => (decimal?)(t.QuantityOutPieces * t.UnitCost)) ?? (totalSales * 0.75m);
+
+        var totalExpenses = await _context.Expenses
+            .Where(e => e.ExpenseDate >= startPeriod && e.ExpenseDate <= endPeriod)
+            .SumAsync(e => (decimal?)e.Amount) ?? 0m;
+
+        var totalSalaries = await _context.WorkerSalaryVouchers
+            .Where(s => s.Year == request.FiscalYear && (!request.Month.HasValue || s.Month == request.Month.Value))
+            .SumAsync(s => (decimal?)s.NetPaid) ?? 0m;
+
+        var count = await _context.PeriodClosings.CountAsync();
+        var closingNumber = $"CLS-{request.FiscalYear}-{(request.Month.HasValue ? request.Month.Value.ToString("D2") : "YR")}-{count + 1:D3}";
+
+        var closing = new PeriodClosing
+        {
+            ClosingNumber = closingNumber,
+            ClosingType = request.ClosingType,
+            FiscalYear = request.FiscalYear,
+            Month = request.Month,
+            ClosingDate = DateTime.UtcNow,
+            TotalSales = totalSales,
+            TotalCostOfGoodsSold = totalCogs,
+            TotalExpenses = totalExpenses,
+            TotalSalaries = totalSalaries,
+            IsLocked = true,
+            Notes = request.Notes,
+            CreatedBy = userId
+        };
+
+        await _context.PeriodClosings.AddAsync(closing);
+        await _context.SaveChangesAsync();
+
+        return closing.Id;
+    }
 }
 

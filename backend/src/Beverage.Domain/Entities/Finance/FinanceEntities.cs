@@ -133,3 +133,21 @@ public class DailyClosing : AuditableEntity
     public string? Notes { get; set; }
 }
 
+public class PeriodClosing : AuditableEntity
+{
+    public string ClosingNumber { get; set; } = string.Empty;
+    public string ClosingType { get; set; } = "Monthly"; // Monthly, Annual
+    public int FiscalYear { get; set; }
+    public int? Month { get; set; }
+    public DateTime ClosingDate { get; set; } = DateTime.UtcNow;
+    public decimal TotalSales { get; set; }
+    public decimal TotalCostOfGoodsSold { get; set; }
+    public decimal GrossProfit => TotalSales - TotalCostOfGoodsSold;
+    public decimal TotalExpenses { get; set; }
+    public decimal TotalSalaries { get; set; }
+    public decimal NetProfit => GrossProfit - TotalExpenses - TotalSalaries;
+    public bool IsLocked { get; set; } = true;
+    public string? Notes { get; set; }
+    public Guid? JournalEntryId { get; set; }
+}
+

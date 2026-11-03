@@ -17,6 +17,13 @@ import {
   ChevronRight,
   ChevronLeft,
   Snowflake,
+  Zap,
+  Users,
+  BadgePercent,
+  CalendarClock,
+  Clock,
+  ShieldCheck,
+  Database,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -27,14 +34,21 @@ export const Sidebar: React.FC = () => {
 
   const navItems = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { id: 'pos', label: t('pos'), icon: Zap, badge: 'سريع' },
     { id: 'products', label: t('products'), icon: Package },
     { id: 'warehouses', label: t('warehouses'), icon: Warehouse, badge: 'تبريد' },
+    { id: 'workers', label: t('workers'), icon: Users },
     { id: 'purchasing', label: t('purchases'), icon: ShoppingCart },
     { id: 'distributors', label: t('distributors'), icon: Truck },
     { id: 'customers', label: t('customers'), icon: Store },
+    { id: 'debt', label: t('debt'), icon: BadgePercent, badge: 'متابعة' },
     { id: 'sales', label: t('sales'), icon: Receipt },
     { id: 'finance', label: t('finance'), icon: Wallet },
+    { id: 'closings', label: t('closings'), icon: CalendarClock },
     { id: 'reports', label: t('reports'), icon: FileBarChart },
+    { id: 'activity', label: t('activity'), icon: Clock },
+    { id: 'users', label: t('users'), icon: ShieldCheck },
+    { id: 'database', label: t('database'), icon: Database },
     { id: 'settings', label: t('settings'), icon: Settings },
   ];
 

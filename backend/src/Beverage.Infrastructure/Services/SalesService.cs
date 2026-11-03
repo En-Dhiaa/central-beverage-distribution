@@ -368,5 +368,73 @@ public class SalesService : ISalesService
 
         return list.OrderBy(e => e.Date).ToList();
     }
+
+    public async Task<SalesInvoicePrintDto?> GetInvoiceForPrintAsync(Guid invoiceId)
+    {
+        var inv = await _context.SalesInvoices
+            .Include(i => i.Customer)
+            .Include(i => i.Distributor)
+            .Include(i => i.Items)
+                .ThenInclude(it => it.Product)
+            .FirstOrDefaultAsync(i => i.Id == invoiceId);
+
+        if (inv == null) return null;
+
+        return new SalesInvoicePrintDto(
+            inv.Id,
+            inv.InvoiceNumber,
+            inv.InvoiceDate,
+            inv.Customer?.Name ?? "عميل نقدي",
+            inv.Customer?.Phone,
+            inv.Customer?.Area,
+            inv.Distributor?.Name,
+            inv.PaymentMethod.ToString(),
+            inv.Total,
+            inv.PaidAmount,
+            inv.Total - inv.PaidAmount,
+            inv.Notes ?? "",
+            inv.Items.Select(it => new SalesInvoicePrintItemDto(
+                it.Product?.Name ?? "صنف",
+                it.QuantityCartons,
+                it.QuantityPieces,
+                it.UnitPricePerCarton,
+                it.Total
+            )).ToList()
+        );
+    }
+
+    public async Task<List<SalesInvoicePrintDto>> GetRecentInvoicesAsync(int limit = 20)
+    {
+        var invoices = await _context.SalesInvoices
+            .Include(i => i.Customer)
+            .Include(i => i.Distributor)
+            .Include(i => i.Items)
+                .ThenInclude(it => it.Product)
+            .OrderByDescending(i => i.InvoiceDate)
+            .Take(limit)
+            .ToListAsync();
+
+        return invoices.Select(inv => new SalesInvoicePrintDto(
+            inv.Id,
+            inv.InvoiceNumber,
+            inv.InvoiceDate,
+            inv.Customer?.Name ?? "عميل نقدي",
+            inv.Customer?.Phone,
+            inv.Customer?.Area,
+            inv.Distributor?.Name,
+            inv.PaymentMethod.ToString(),
+            inv.Total,
+            inv.PaidAmount,
+            inv.Total - inv.PaidAmount,
+            inv.Notes ?? "",
+            inv.Items.Select(it => new SalesInvoicePrintItemDto(
+                it.Product?.Name ?? "صنف",
+                it.QuantityCartons,
+                it.QuantityPieces,
+                it.UnitPricePerCarton,
+                it.Total
+            )).ToList()
+        )).ToList();
+    }
 }
 

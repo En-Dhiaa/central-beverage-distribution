@@ -10,7 +10,17 @@ export const DistributorsView: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
+  const [isAddDistributorOpen, setIsAddDistributorOpen] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // New Distributor Form State
+  const [newCode, setNewCode] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newAddress, setNewAddress] = useState('');
+  const [newRouteArea, setNewRouteArea] = useState('');
+  const [newRelationshipType, setNewRelationshipType] = useState<'Consignment' | 'Wholesale'>('Consignment');
+  const [newCreditLimit, setNewCreditLimit] = useState(150000);
 
   // Active distributor for modal
   const [activeDistributor, setActiveDistributor] = useState<Distributor | null>(null);
@@ -121,6 +131,35 @@ export const DistributorsView: React.FC = () => {
     }
   };
 
+  const handleAddDistributor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName) return;
+    try {
+      await api.createDistributor({
+        distributorCode: newCode || `DIST-${Math.floor(100 + Math.random() * 900)}`,
+        name: newName,
+        phone: newPhone || undefined,
+        address: newAddress || undefined,
+        routeArea: newRouteArea || undefined,
+        relationshipType: newRelationshipType,
+        creditLimit: Number(newCreditLimit),
+        openingBalance: 0,
+      });
+      setStatusMsg({
+        type: 'success',
+        text: `تمت إضافة الموزع ${newName} بنجاح!`,
+      });
+      setIsAddDistributorOpen(false);
+      setNewName('');
+      setNewPhone('');
+      setNewAddress('');
+      setNewRouteArea('');
+      loadData();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message || 'فشل إضافة الموزع' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -133,6 +172,16 @@ export const DistributorsView: React.FC = () => {
             تسليم العهد من الثلاجة المركزية، مراقبة المبيعات الميدانية، والاعتماد المحاسبي للتسوية اليومية
           </p>
         </div>
+        <button
+          onClick={() => {
+            setNewCode(`DIST-${Math.floor(100 + Math.random() * 900)}`);
+            setIsAddDistributorOpen(true);
+          }}
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 shadow-sm"
+        >
+          <Plus className="h-4 w-4" />
+          <span>إضافة موزع جديد</span>
+        </button>
       </div>
 
       {/* Alert banner */}
@@ -379,6 +428,117 @@ export const DistributorsView: React.FC = () => {
                   className="rounded-xl bg-emerald-600 text-white px-5 py-2 font-bold hover:bg-emerald-700 shadow-sm"
                 >
                   اعتماد التسوية وتوريد النقدية
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Add Distributor Modal */}
+      {isAddDistributorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95">
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-4">
+              <Plus className="h-5 w-5 text-primary" />
+              إضافة موزع ميداني جديد
+            </h3>
+
+            <form onSubmit={handleAddDistributor} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-foreground mb-1">كود الموزع</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCode}
+                    onChange={(e) => setNewCode(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-foreground mb-1">نوع العلاقة</label>
+                  <select
+                    value={newRelationshipType}
+                    onChange={(e) => setNewRelationshipType(e.target.value as any)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5"
+                  >
+                    <option value="Consignment">عهدة وأمانة (Consignment)</option>
+                    <option value="Wholesale">بيع جملة مباشر (Wholesale)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-foreground mb-1">اسم الموزع الكامل</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: صالح عبدالله مهدي"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background p-2.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-foreground mb-1">رقم الهاتف / الواتساب</label>
+                  <input
+                    type="tel"
+                    placeholder="770000000"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-foreground mb-1">سقف الائتمان / العهدة ({t('rial')})</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newCreditLimit}
+                    onChange={(e) => setNewCreditLimit(Number(e.target.value))}
+                    className="w-full rounded-xl border border-border bg-background p-2.5 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-foreground mb-1">خط السير / المنطقة</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: خط مذبح - شملان"
+                    value={newRouteArea}
+                    onChange={(e) => setNewRouteArea(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-foreground mb-1">العنوان / ملاحظات</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: سيارة دينا تويوتا"
+                    value={newAddress}
+                    onChange={(e) => setNewAddress(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddDistributorOpen(false)}
+                  className="rounded-xl border border-border px-4 py-2 font-bold text-muted-foreground hover:bg-muted"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-primary text-primary-foreground px-5 py-2 font-bold hover:bg-primary/90 shadow-sm"
+                >
+                  حفظ الموزع
                 </button>
               </div>
             </form>

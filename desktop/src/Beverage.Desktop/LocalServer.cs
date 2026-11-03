@@ -81,6 +81,10 @@ public static class LocalServer
             builder.Services.AddScoped<ISalesService, SalesService>();
             builder.Services.AddScoped<IFinanceService, FinanceService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IWorkerService, WorkerService>();
+            builder.Services.AddScoped<IActivityService, ActivityService>();
+            builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 
             // 5. JWT Authentication
             var jwtSecret = "super_secret_beverage_management_key_change_in_production_min_32_chars!";

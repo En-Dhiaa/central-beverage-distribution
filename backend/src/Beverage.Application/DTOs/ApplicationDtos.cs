@@ -342,4 +342,187 @@ public record DailyClosingDto(
     DateTime CreatedAt
 );
 
+// --- User Management ---
+public record UserDto(
+    Guid Id,
+    string Username,
+    string FullName,
+    string? Email,
+    string? Phone,
+    string Role,
+    Guid RoleId,
+    bool IsActive,
+    DateTime CreatedAt
+);
+
+public record CreateUserRequest(
+    string Username,
+    string Password,
+    string FullName,
+    string? Email,
+    string? Phone,
+    Guid RoleId
+);
+
+public record RoleDto(
+    Guid Id,
+    string Name,
+    string Description
+);
+
+// --- Cold-Store Workers & Salaries ---
+public record WorkerDto(
+    Guid Id,
+    string WorkerCode,
+    string FullName,
+    string? NationalId,
+    string Phone,
+    string JobTitle,
+    decimal BaseSalary,
+    string SalaryType,
+    int ShiftHours,
+    DateTime HireDate,
+    bool IsActive,
+    string? Notes
+);
+
+public record CreateWorkerRequest(
+    string WorkerCode,
+    string FullName,
+    string? NationalId,
+    string Phone,
+    string JobTitle,
+    decimal BaseSalary,
+    string SalaryType,
+    int ShiftHours,
+    string? Notes
+);
+
+public record WorkerSalaryVoucherDto(
+    Guid Id,
+    string VoucherNumber,
+    Guid WorkerId,
+    string WorkerName,
+    int Year,
+    int Month,
+    decimal BaseSalary,
+    decimal BonusAmount,
+    decimal DeductionsAmount,
+    decimal NetPaid,
+    DateTime PaymentDate,
+    Guid CashboxId,
+    string CashboxName,
+    string? Notes
+);
+
+public record PayWorkerSalaryRequest(
+    Guid WorkerId,
+    int Year,
+    int Month,
+    decimal BaseSalary,
+    decimal BonusAmount,
+    decimal DeductionsAmount,
+    Guid CashboxId,
+    string? Notes
+);
+
+// --- Period Closings (Monthly / Annual) ---
+public record PeriodClosingDto(
+    Guid Id,
+    string ClosingNumber,
+    string ClosingType,
+    int FiscalYear,
+    int? Month,
+    DateTime ClosingDate,
+    decimal TotalSales,
+    decimal TotalCostOfGoodsSold,
+    decimal GrossProfit,
+    decimal TotalExpenses,
+    decimal TotalSalaries,
+    decimal NetProfit,
+    bool IsLocked,
+    string? Notes
+);
+
+public record CreatePeriodClosingRequest(
+    string ClosingType,
+    int FiscalYear,
+    int? Month,
+    string? Notes
+);
+
+// --- Debt Aging & Customer Debt Management ---
+public record CustomerDebtAgingDto(
+    Guid CustomerId,
+    string CustomerCode,
+    string CustomerName,
+    string? Phone,
+    string? Area,
+    decimal CreditLimit,
+    decimal TotalDebt,
+    decimal Current0To30Days,
+    decimal Overdue31To60Days,
+    decimal Overdue61To90Days,
+    decimal CriticalOver90Days,
+    DateTime? LastPaymentDate,
+    string DebtStatus
+);
+
+// --- Daily Activity / Movement Audit Log ---
+public record ActivityLogItemDto(
+    DateTime Timestamp,
+    string Module,
+    string ActionType,
+    string DocumentNumber,
+    string Description,
+    decimal Amount,
+    string UserName,
+    string Status
+);
+
+// --- Database Management ---
+public record DatabaseStatusDto(
+    string Provider,
+    string DatabasePath,
+    double FileSizeBytes,
+    double FileSizeMegabytes,
+    int TablesCount,
+    long TotalRecordsCount,
+    DateTime LastBackupDate,
+    List<BackupFileInfoDto> Backups
+);
+
+public record BackupFileInfoDto(
+    string FileName,
+    string FullPath,
+    double SizeMegabytes,
+    DateTime CreatedAt
+);
+
+// --- Invoice Detail for Multi-Format Printing ---
+public record SalesInvoicePrintDto(
+    Guid Id,
+    string InvoiceNumber,
+    DateTime InvoiceDate,
+    string CustomerName,
+    string? CustomerPhone,
+    string? CustomerArea,
+    string? DistributorName,
+    string PaymentMethod,
+    decimal TotalAmount,
+    decimal PaidAmount,
+    decimal RemainingAmount,
+    string Notes,
+    List<SalesInvoicePrintItemDto> Items
+);
+
+public record SalesInvoicePrintItemDto(
+    string ProductName,
+    decimal QuantityCartons,
+    decimal QuantityPieces,
+    decimal UnitPricePerCarton,
+    decimal TotalPrice
+);
+
+
 

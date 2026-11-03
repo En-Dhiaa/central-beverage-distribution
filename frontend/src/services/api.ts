@@ -10,6 +10,16 @@ import {
   UserProfile,
   DailyClosingSummary,
   DailyClosing,
+  WarehouseWorker,
+  WorkerSalaryVoucher,
+  PeriodClosing,
+  CustomerDebtAging,
+  ActivityLogItem,
+  DatabaseStatus,
+  BackupFileInfo,
+  SalesInvoicePrint,
+  UserAccount,
+  Role,
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -253,6 +263,154 @@ export const api = {
       headers: { ...getAuthHeader() },
     });
     return handleResponse<DailyClosing[]>(res);
+  },
+
+  // Sales History & Printable Invoices
+  async getRecentInvoices(limit: number = 30): Promise<SalesInvoicePrint[]> {
+    const res = await fetch(`${API_BASE}/customers/sales/history?limit=${limit}`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<SalesInvoicePrint[]>(res);
+  },
+
+  async getInvoiceForPrint(id: string): Promise<SalesInvoicePrint> {
+    const res = await fetch(`${API_BASE}/customers/sales/${id}/print`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<SalesInvoicePrint>(res);
+  },
+
+  // Debt Aging & Period Closings
+  async getCustomerDebtAging(): Promise<CustomerDebtAging[]> {
+    const res = await fetch(`${API_BASE}/finance/debt-aging`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<CustomerDebtAging[]>(res);
+  },
+
+  async getPeriodClosings(): Promise<PeriodClosing[]> {
+    const res = await fetch(`${API_BASE}/finance/period-closings`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<PeriodClosing[]>(res);
+  },
+
+  async createPeriodClosing(data: { closingType: string; fiscalYear: number; month?: number; notes?: string }) {
+    const res = await fetch(`${API_BASE}/finance/period-closings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ id: string; message: string }>(res);
+  },
+
+  // Users & Permissions
+  async getUsers(): Promise<UserAccount[]> {
+    const res = await fetch(`${API_BASE}/users`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<UserAccount[]>(res);
+  },
+
+  async createUser(data: any): Promise<UserAccount> {
+    const res = await fetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<UserAccount>(res);
+  },
+
+  async toggleUserStatus(id: string) {
+    const res = await fetch(`${API_BASE}/users/${id}/status`, {
+      method: 'PUT',
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<{ isActive: boolean; message: string }>(res);
+  },
+
+  async getRoles(): Promise<Role[]> {
+    const res = await fetch(`${API_BASE}/users/roles`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<Role[]>(res);
+  },
+
+  // Workers & Payroll
+  async getWorkers(): Promise<WarehouseWorker[]> {
+    const res = await fetch(`${API_BASE}/workers`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<WarehouseWorker[]>(res);
+  },
+
+  async createWorker(data: any): Promise<WarehouseWorker> {
+    const res = await fetch(`${API_BASE}/workers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<WarehouseWorker>(res);
+  },
+
+  async payWorkerSalary(data: any) {
+    const res = await fetch(`${API_BASE}/workers/salaries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ id: string; message: string }>(res);
+  },
+
+  async getSalaryVouchers(): Promise<WorkerSalaryVoucher[]> {
+    const res = await fetch(`${API_BASE}/workers/salaries`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<WorkerSalaryVoucher[]>(res);
+  },
+
+  // Activity Log
+  async getDailyActivityLog(fromDate?: string, toDate?: string): Promise<ActivityLogItem[]> {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('fromDate', fromDate);
+    if (toDate) params.append('toDate', toDate);
+    const res = await fetch(`${API_BASE}/activity/daily?${params.toString()}`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<ActivityLogItem[]>(res);
+  },
+
+  // Database Management
+  async getDatabaseStatus(): Promise<DatabaseStatus> {
+    const res = await fetch(`${API_BASE}/database/status`, {
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<DatabaseStatus>(res);
+  },
+
+  async createDatabaseBackup() {
+    const res = await fetch(`${API_BASE}/database/backup`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<{ fileName: string; message: string }>(res);
+  },
+
+  async restoreDatabaseBackup(fileName: string) {
+    const res = await fetch(`${API_BASE}/database/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ fileName }),
+    });
+    return handleResponse<{ success: boolean; message: string }>(res);
+  },
+
+  async vacuumDatabase() {
+    const res = await fetch(`${API_BASE}/database/vacuum`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    return handleResponse<{ success: boolean; message: string }>(res);
   },
 };
 

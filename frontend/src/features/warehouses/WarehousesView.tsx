@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import { Product } from '../../types';
-import { Warehouse, Snowflake, ArrowLeftRight, CheckCircle2, ThermometerSnowflake } from 'lucide-react';
+import { Warehouse, Snowflake, ArrowLeftRight, CheckCircle2, ThermometerSnowflake, Users } from 'lucide-react';
+import { useUIStore } from '../../stores/uiStore';
 
 export const WarehousesView: React.FC = () => {
   const { t } = useTranslation();
+  const { setActiveNav } = useUIStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [selectedProdId, setSelectedProdId] = useState('');
@@ -60,13 +62,22 @@ export const WarehousesView: React.FC = () => {
             مراقبة بيئة التخزين والتبريد، وإدارة حركات النقل المخزنية بين المستودعات
           </p>
         </div>
-        <button
-          onClick={() => setIsTransferOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-cyan-600 text-white px-4 py-2.5 text-xs font-bold hover:bg-cyan-700 shadow-sm transition-all"
-        >
-          <ArrowLeftRight className="h-4 w-4" />
-          <span>تحويل بضاعة للثلاجة المركزية</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveNav('workers')}
+            className="flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold text-cyan-600 hover:bg-cyan-500/20 shadow-sm transition-all"
+          >
+            <Users className="h-4 w-4" />
+            <span>عمال الثلاجة والرواتب</span>
+          </button>
+          <button
+            onClick={() => setIsTransferOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-cyan-600 text-white px-4 py-2.5 text-xs font-bold hover:bg-cyan-700 shadow-sm transition-all"
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+            <span>تحويل بضاعة للثلاجة المركزية</span>
+          </button>
+        </div>
       </div>
 
       {/* Warehouse Cards Grid */}
