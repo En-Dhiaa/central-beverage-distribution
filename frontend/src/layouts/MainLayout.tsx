@@ -1,28 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { ToastContainer } from '../components/notifications/ToastContainer';
 import { OnboardingWizardModal } from '../components/modals/OnboardingWizardModal';
 import { useUIStore } from '../stores/uiStore';
-import { DashboardView } from '../features/dashboard/DashboardView';
-import { QuickPOSView } from '../features/sales/QuickPOSView';
-import { ProductsView } from '../features/products/ProductsView';
-import { PurchasingView } from '../features/purchasing/PurchasingView';
-import { WarehousesView } from '../features/warehouses/WarehousesView';
-import { WorkersView } from '../features/warehouses/WorkersView';
-import { DistributorsView } from '../features/distributors/DistributorsView';
-import { CustomersView } from '../features/customers/CustomersView';
-import { DebtManagementView } from '../features/finance/DebtManagementView';
-import { QuotationsView } from '../features/sales/QuotationsView';
-import { SalesView } from '../features/sales/SalesView';
-import { SalesReturnsView } from '../features/sales/SalesReturnsView';
-import { FinanceView } from '../features/finance/FinanceView';
-import { ClosingsView } from '../features/finance/ClosingsView';
-import { ReportsView } from '../features/reports/ReportsView';
-import { ActivityLogView } from '../features/reports/ActivityLogView';
-import { UsersView } from '../features/settings/UsersView';
-import { DatabaseView } from '../features/settings/DatabaseView';
-import { SettingsView } from '../features/settings/SettingsView';
+
+// Lazy-loaded Views for High-Performance Code-Splitting
+const DashboardView = React.lazy(() => import('../features/dashboard/DashboardView').then(m => ({ default: m.DashboardView })));
+const QuickPOSView = React.lazy(() => import('../features/sales/QuickPOSView').then(m => ({ default: m.QuickPOSView })));
+const ProductsView = React.lazy(() => import('../features/products/ProductsView').then(m => ({ default: m.ProductsView })));
+const WarehousesView = React.lazy(() => import('../features/warehouses/WarehousesView').then(m => ({ default: m.WarehousesView })));
+const WorkersView = React.lazy(() => import('../features/warehouses/WorkersView').then(m => ({ default: m.WorkersView })));
+const PurchasingView = React.lazy(() => import('../features/purchasing/PurchasingView').then(m => ({ default: m.PurchasingView })));
+const DistributorsView = React.lazy(() => import('../features/distributors/DistributorsView').then(m => ({ default: m.DistributorsView })));
+const CustomersView = React.lazy(() => import('../features/customers/CustomersView').then(m => ({ default: m.CustomersView })));
+const DebtManagementView = React.lazy(() => import('../features/finance/DebtManagementView').then(m => ({ default: m.DebtManagementView })));
+const QuotationsView = React.lazy(() => import('../features/sales/QuotationsView').then(m => ({ default: m.QuotationsView })));
+const SalesView = React.lazy(() => import('../features/sales/SalesView').then(m => ({ default: m.SalesView })));
+const SalesReturnsView = React.lazy(() => import('../features/sales/SalesReturnsView').then(m => ({ default: m.SalesReturnsView })));
+const FinanceView = React.lazy(() => import('../features/finance/FinanceView').then(m => ({ default: m.FinanceView })));
+const ClosingsView = React.lazy(() => import('../features/finance/ClosingsView').then(m => ({ default: m.ClosingsView })));
+const ReportsView = React.lazy(() => import('../features/reports/ReportsView').then(m => ({ default: m.ReportsView })));
+const ActivityLogView = React.lazy(() => import('../features/reports/ActivityLogView').then(m => ({ default: m.ActivityLogView })));
+const UsersView = React.lazy(() => import('../features/settings/UsersView').then(m => ({ default: m.UsersView })));
+const DatabaseView = React.lazy(() => import('../features/settings/DatabaseView').then(m => ({ default: m.DatabaseView })));
+const SettingsView = React.lazy(() => import('../features/settings/SettingsView').then(m => ({ default: m.SettingsView })));
+
+const ViewLoadingFallback = () => (
+  <div className="flex h-96 w-full items-center justify-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      <span className="text-xs font-bold text-muted-foreground">جاري تحميل الشاشة...</span>
+    </div>
+  </div>
+);
 
 export const MainLayout: React.FC = () => {
   const { activeNav } = useUIStore();
@@ -90,10 +101,12 @@ export const MainLayout: React.FC = () => {
         {/* Topbar */}
         <Topbar />
 
-        {/* Dynamic Page Content */}
+        {/* Dynamic Page Content with Suspense */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="mx-auto max-w-7xl animate-in fade-in duration-300">
-            {renderContent()}
+            <Suspense fallback={<ViewLoadingFallback />}>
+              {renderContent()}
+            </Suspense>
           </div>
         </main>
       </div>

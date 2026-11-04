@@ -185,4 +185,5 @@ class SoundSynthesizer {
 }
 
 export const sounds = new SoundSynthesizer();
+export const soundEffects = sounds;
 
