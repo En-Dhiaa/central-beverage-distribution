@@ -16,7 +16,9 @@ public class WorkflowIntegrationTests : IClassFixture<WebApplicationFactory<Prog
 
     public WorkflowIntegrationTests(WebApplicationFactory<Program> factory)
     {
-        var testDb = $"Data Source=storage/test_{Guid.NewGuid():N}.db";
+        var testDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "storage");
+        Directory.CreateDirectory(testDir);
+        var testDb = $"Data Source={Path.Combine(testDir, $"test_{Guid.NewGuid():N}.db")}";
         _client = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
