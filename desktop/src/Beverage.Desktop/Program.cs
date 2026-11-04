@@ -54,7 +54,9 @@ static class Program
                 MinimumSize = new Size(1024, 680),
                 StartPosition = FormStartPosition.CenterScreen,
                 WindowState = FormWindowState.Maximized,
-                Icon = SystemIcons.Application
+                Icon = File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico")) 
+                    ? new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico")) 
+                    : (Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath) ?? SystemIcons.Application)
             };
             Log("Form created.");
 

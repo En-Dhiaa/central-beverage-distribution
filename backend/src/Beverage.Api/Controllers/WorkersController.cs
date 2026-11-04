@@ -66,3 +66,4 @@ public class WorkersController : ControllerBase
         return Ok(vouchers);
     }
 }
+

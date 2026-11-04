@@ -23,3 +23,4 @@ public class ActivityController : ControllerBase
         return Ok(log);
     }
 }
+

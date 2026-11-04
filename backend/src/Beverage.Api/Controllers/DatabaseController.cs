@@ -61,3 +61,4 @@ public class DatabaseController : ControllerBase
         return Ok(new { success, message = "تم ضغط وترتيب مساحة قاعدة البيانات وإعادة بناء الفهارس بنجاح." });
     }
 }
+

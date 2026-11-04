@@ -36,3 +36,4 @@ public class BrandSettingsController : ControllerBase
         return Ok(profile);
     }
 }
+
